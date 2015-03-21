@@ -18,7 +18,7 @@ class HeightMap {
 
 		int getWidth();
 		int getLength();
-		int getHeight(int w, int l);
+		int getHeight(unsigned int w, unsigned int l);
 		int getMaxHeight();
 		bool wasSuccessful();
 

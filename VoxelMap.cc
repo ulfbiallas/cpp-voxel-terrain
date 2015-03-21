@@ -16,7 +16,7 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	for (w=0; w<width; ++w) {
 		for (l=0; l<length; ++l) {
 
-			heightInHeightMap = height * heightMap->getHeight(w, l) / 255.0;
+			heightInHeightMap = height * heightMap->getHeight(w, l) / 255.0f;
 
 			for(h=0; h<height; ++h) {
 				if(h<heightInHeightMap) {
@@ -30,7 +30,7 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	}
 
 	marchingCuber = new MarchingCuber();
-	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, 0.2, 0.5);
+	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, 0.2f, 0.5f);
 }
 
 

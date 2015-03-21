@@ -40,7 +40,7 @@ int HeightMap::getLength() {
 
 
 
-int HeightMap::getHeight(int w, int h) {
+int HeightMap::getHeight(unsigned int w, unsigned int h) {
 	if ( w>=0 && w<heightMap->width && h>=0 && h<heightMap->length) {
 		return (int) heightMap->data[heightMap->width * h + w];
 	} else {
@@ -74,7 +74,7 @@ void HeightMap::createHeightMapFromImage(Image *image) {
 	heightMap->length = image->height;
 	heightMap->data = (unsigned char*) malloc(heightMap->width * heightMap->length * sizeof(unsigned char));
 
-	int iw, ih;
+	unsigned int iw, ih;
 	unsigned char r,g,b,a, height;
 
 	for(ih = 0; ih < image->height; ih++) {
@@ -84,7 +84,7 @@ void HeightMap::createHeightMapFromImage(Image *image) {
 			b = image->data[4 * image->width * ih + 4 * iw + 2];
 			a = image->data[4 * image->width * ih + 4 * iw + 3];
 
-			height = 1.0 / 3.0f * (r+g+b);
+			height = (unsigned) (1.0f / 3.0f * (r+g+b));
 
 			heightMap->data[heightMap->width * ih + iw] = height;
 
