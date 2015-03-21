@@ -29,6 +29,8 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 		}
 	}
 
+	marchingCuber = new MarchingCuber();
+	triangles = marchingCuber->marchingCubes(&data, Vec3f(0,0,0), width, height, length, 0.2, 0.5);
 }
 
 
@@ -63,6 +65,12 @@ int VoxelMap::getHeight() {
 
 int VoxelMap::getLength() {
 	return length;
+}
+
+
+
+vector<MarchingCuber::TRIANGLE> VoxelMap::getTriangles() {
+	return triangles;
 }
 
 

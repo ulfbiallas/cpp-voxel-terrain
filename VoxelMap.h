@@ -6,6 +6,8 @@
 #include <vector>
 #include "lodepng.h"
 #include "HeightMap.h"
+#include "MarchingCuber.h"
+
 
 
 class VoxelMap {
@@ -19,13 +21,15 @@ class VoxelMap {
 		int getWidth();
 		int getHeight();
 		int getLength();
-
+		vector<MarchingCuber::TRIANGLE> getTriangles();
 
 
 	private:
 
 		int width, height, length;
 		float *data;
+		MarchingCuber *marchingCuber;
+		vector<MarchingCuber::TRIANGLE> triangles;
 
 		int index(int w, int h, int l);
 

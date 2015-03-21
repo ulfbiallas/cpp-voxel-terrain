@@ -14,7 +14,7 @@ set(GLUT_LIBRARY glut64)
 
 
 
-add_executable(main main.cc HeightMap.cc VoxelMap.cc lodepng.cc)
+add_executable(main main.cc HeightMap.cc VoxelMap.cc MarchingCuber.cc lodepng.cc)
 
 include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
 target_link_libraries(main ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} )
