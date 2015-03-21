@@ -8,7 +8,7 @@
 #include <ctime>
 
 #include "datatypes.h"
-
+#include "HeightMap.h"
 
 
 #define PI 3.1415926535
@@ -32,11 +32,11 @@ Vec3f mouse_pos_alt;
 Vec3f viewer_pos = Vec3f(0, 0, -10);
 Vec3f viewer_dir;
 
-
-
 GLfloat light_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
 GLfloat light_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
 GLfloat light_position[] = { 100.0, 100.0, 100.0, 1.0 };
+
+HeightMap *heightMap;
 
 
 
@@ -59,6 +59,8 @@ float inline random() {
 int main(int argc, char ** argv) {
 
 	srand((unsigned)time(NULL));
+
+	heightMap = new HeightMap("heightmap.png");
 
 	glutInit(&argc, argv);
 	glutInitWindowSize(640, 480);
@@ -126,12 +128,27 @@ void display(void) {
 	glColor3f(0,0,0);
 
 
-	glBegin(GL_QUADS);
-	glVertex3f(-1.0f, 1.0f, 1.0f);
-	glVertex3f(-1.0f, -1.0f, 1.0f);
-	glVertex3f(1.0f, -1.0f, 1.0f);
-	glVertex3f(1.0f, 1.0f, 1.0f);
-	glEnd();
+
+	if(heightMap->wasSuccessful()) {
+		int ix, iy;
+		float blockSize = 0.2f;
+		float heightFactor = 0.01;
+
+		glBegin(GL_QUADS);
+		for (iy=0; iy<heightMap->getLength(); ++iy) {
+			for (ix=0; ix<heightMap->getWidth(); ++ix) {
+
+				glVertex3f(blockSize * (ix + 0), heightFactor * heightMap->getHeight(ix+0, iy+0), blockSize * (iy + 0));
+				glVertex3f(blockSize * (ix + 1), heightFactor * heightMap->getHeight(ix+1, iy+0), blockSize * (iy + 0));
+				glVertex3f(blockSize * (ix + 1), heightFactor * heightMap->getHeight(ix+1, iy+1), blockSize * (iy + 1));
+				glVertex3f(blockSize * (ix + 0), heightFactor * heightMap->getHeight(ix+0, iy+1), blockSize * (iy + 1));
+
+			}
+		}
+		glEnd();
+	}
+
+
 
 	glutSwapBuffers();
 	glutPostRedisplay();
