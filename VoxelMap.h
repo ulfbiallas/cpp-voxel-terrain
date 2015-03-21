@@ -21,7 +21,7 @@ class VoxelMap {
 		int getWidth();
 		int getHeight();
 		int getLength();
-		vector<MarchingCuber::TRIANGLE> getTriangles();
+		std::vector<MarchingCuber::TRIANGLE> getTriangles();
 
 
 	private:
@@ -29,7 +29,7 @@ class VoxelMap {
 		int width, height, length;
 		float *data;
 		MarchingCuber *marchingCuber;
-		vector<MarchingCuber::TRIANGLE> triangles;
+		std::vector<MarchingCuber::TRIANGLE> triangles;
 
 		int index(int w, int h, int l);
 

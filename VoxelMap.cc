@@ -69,7 +69,7 @@ int VoxelMap::getLength() {
 
 
 
-vector<MarchingCuber::TRIANGLE> VoxelMap::getTriangles() {
+std::vector<MarchingCuber::TRIANGLE> VoxelMap::getTriangles() {
 	return triangles;
 }
 

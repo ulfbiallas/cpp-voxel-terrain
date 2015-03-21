@@ -8,10 +8,6 @@
 
 
 
-using namespace std;
-
-class Chunk;
-
 class MarchingCuber {
 	
     public:      
@@ -37,13 +33,14 @@ class MarchingCuber {
 		};
 
 
-
-		MarchingCuber(); 
-		vector<TRIANGLE> marchingCubes(float **voxels, Vec3f pos, int dimX, int dimY, int dimZ, float h, float isolevel);
+		std::vector<TRIANGLE> marchingCubes(float **voxels, Vec3f pos, int dimX, int dimY, int dimZ, float h, float isolevel);
 
 
 
 	private:
+
+		int edgeTable[256];
+		int triTable[256][16];
 		
 		Vec3f getGradient(float **voxels, int dimX, int dimY, int dimZ, int ix_, int iy_, int iz_);
 		Vec3f VertexInterp(float isolevel, Vec3f p1, Vec3f p2, float valp1, float valp2);
