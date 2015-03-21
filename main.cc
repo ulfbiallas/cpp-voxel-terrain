@@ -9,6 +9,8 @@
 
 #include "datatypes.h"
 #include "HeightMap.h"
+#include "VoxelMap.h"
+
 
 
 #define PI 3.1415926535
@@ -37,6 +39,7 @@ GLfloat light_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
 GLfloat light_position[] = { 100.0, 100.0, 100.0, 1.0 };
 
 HeightMap *heightMap;
+VoxelMap *voxelMap;
 
 
 
@@ -61,6 +64,8 @@ int main(int argc, char ** argv) {
 	srand((unsigned)time(NULL));
 
 	heightMap = new HeightMap("heightmap.png");
+	voxelMap = new VoxelMap(heightMap);
+
 
 	glutInit(&argc, argv);
 	glutInitWindowSize(640, 480);
@@ -130,22 +135,26 @@ void display(void) {
 
 
 	if(heightMap->wasSuccessful()) {
-		int ix, iy;
+
+		int w,h,l;
+		float density;
 		float blockSize = 0.2f;
-		float heightFactor = 0.01;
 
-		glBegin(GL_QUADS);
-		for (iy=0; iy<heightMap->getLength(); ++iy) {
-			for (ix=0; ix<heightMap->getWidth(); ++ix) {
+		glBegin(GL_POINTS);
+		for (w=voxelMap->getWidth()-1; w>=0; --w) {
+			for (h=voxelMap->getHeight()-1; h>=0; --h) {
+				for (l=voxelMap->getLength()-1; l>=0; --l) {
 
-				glVertex3f(blockSize * (ix + 0), heightFactor * heightMap->getHeight(ix+0, iy+0), blockSize * (iy + 0));
-				glVertex3f(blockSize * (ix + 1), heightFactor * heightMap->getHeight(ix+1, iy+0), blockSize * (iy + 0));
-				glVertex3f(blockSize * (ix + 1), heightFactor * heightMap->getHeight(ix+1, iy+1), blockSize * (iy + 1));
-				glVertex3f(blockSize * (ix + 0), heightFactor * heightMap->getHeight(ix+0, iy+1), blockSize * (iy + 1));
-
+					density = voxelMap->getDensity(w, h, l);
+					if(density > 0.5) {
+						glVertex3f(blockSize * w, blockSize * h, blockSize * l);
+					}
+					
+				}
 			}
 		}
 		glEnd();
+		
 	}
 
 
