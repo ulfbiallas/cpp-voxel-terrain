@@ -18,7 +18,8 @@ class HeightMap {
 
 		int getWidth();
 		int getLength();
-		int getHeight(int x, int y);
+		int getHeight(int w, int l);
+		int getMaxHeight();
 		bool wasSuccessful();
 
 
@@ -39,6 +40,7 @@ class HeightMap {
 
 		Map *heightMap;
 		bool hasError;
+		unsigned char maxHeight;
 
 		unsigned loadImage(Image *image, char *filename);
 		void createHeightMapFromImage(Image *image);

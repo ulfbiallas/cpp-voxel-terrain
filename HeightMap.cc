@@ -5,6 +5,7 @@
 HeightMap::HeightMap(char *imagefile) {
 
 	unsigned error;
+	maxHeight = 0;
 	hasError = false;
 	Image *image = new Image();
 
@@ -39,18 +40,24 @@ int HeightMap::getLength() {
 
 
 
-bool HeightMap::wasSuccessful() {
-	return !hasError;
+int HeightMap::getHeight(int w, int h) {
+	if ( w>=0 && w<heightMap->width && h>=0 && h<heightMap->length) {
+		return (int) heightMap->data[heightMap->width * h + w];
+	} else {
+		return 0;
+	}
 }
 
 
 
-int HeightMap::getHeight(int x, int y) {
-	if ( x>=0 && x<heightMap->width && y>=0 && y<heightMap->length) {
-		return (int) heightMap->data[heightMap->width * y + x];
-	} else {
-		return 0;
-	}
+int HeightMap::getMaxHeight() {
+	return (int) maxHeight;
+}
+
+
+
+bool HeightMap::wasSuccessful() {
+	return !hasError;
 }
 
 
@@ -68,7 +75,7 @@ void HeightMap::createHeightMapFromImage(Image *image) {
 	heightMap->data = (unsigned char*) malloc(heightMap->width * heightMap->length * sizeof(unsigned char));
 
 	int iw, ih;
-	unsigned char r,g,b,a, grayvalue;
+	unsigned char r,g,b,a, height;
 
 	for(ih = 0; ih < image->height; ih++) {
 		for(iw = 0; iw < image->width; iw++) {
@@ -77,9 +84,11 @@ void HeightMap::createHeightMapFromImage(Image *image) {
 			b = image->data[4 * image->width * ih + 4 * iw + 2];
 			a = image->data[4 * image->width * ih + 4 * iw + 3];
 
-			grayvalue = 1.0 / 3.0f * (r+g+b);
+			height = 1.0 / 3.0f * (r+g+b);
 
-			heightMap->data[heightMap->width * ih + iw] = grayvalue;
+			heightMap->data[heightMap->width * ih + iw] = height;
+
+			if(height > maxHeight) maxHeight = height;
 		}
 	}
 }
