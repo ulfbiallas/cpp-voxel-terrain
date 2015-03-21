@@ -136,25 +136,21 @@ void display(void) {
 
 	if(heightMap->wasSuccessful()) {
 
-		int w,h,l;
-		float density;
-		float blockSize = 0.2f;
+		int t, v;
+		vector<MarchingCuber::TRIANGLE> triangles = voxelMap->getTriangles();
 
-		glBegin(GL_POINTS);
-		for (w=voxelMap->getWidth()-1; w>=0; --w) {
-			for (h=voxelMap->getHeight()-1; h>=0; --h) {
-				for (l=voxelMap->getLength()-1; l>=0; --l) {
-
-					density = voxelMap->getDensity(w, h, l);
-					if(density > 0.5) {
-						glVertex3f(blockSize * w, blockSize * h, blockSize * l);
-					}
-					
-				}
+		glBegin(GL_TRIANGLES);
+		MarchingCuber::TRIANGLE triangle;
+		for(t=0; t<triangles.size(); ++t) {
+			triangle = triangles[t];
+			for(v=0; v<3; ++v) {
+				glNormal3f(triangle.n[v].x, triangle.n[v].y, triangle.n[v].z);
+				glVertex3f(triangle.p[v].x, triangle.p[v].y, triangle.p[v].z);
 			}
+			
 		}
 		glEnd();
-		
+
 	}
 
 
@@ -169,7 +165,7 @@ void reshape(int width, int height) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glViewport(0, 0, width, height);
-	gluPerspective(70, (float) width/ (float) height, 2 , 2000);
+	gluPerspective(70, (float) width/ (float) height, 0.1 , 200);
 }
 
 
