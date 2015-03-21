@@ -5,12 +5,12 @@
 #include <iostream>
 #include <vector>
 #include "datatypes.h"
-
+#include "MarchingCuberConstants.h"
 
 
 class MarchingCuber {
-	
-    public:      
+
+	public:      
 
 		struct TRIANGLE {
 
@@ -33,20 +33,18 @@ class MarchingCuber {
 		};
 
 
-		std::vector<TRIANGLE> marchingCubes(float **voxels, Vec3f pos, int dimX, int dimY, int dimZ, float h, float isolevel);
+		std::vector<TRIANGLE> extractSurface(float **voxels, Vec3f pos, int dimX, int dimY, int dimZ, float h, float isolevel);
 
 
 
 	private:
-
-		int edgeTable[256];
-		int triTable[256][16];
 		
 		Vec3f getGradient(float **voxels, int dimX, int dimY, int dimZ, int ix_, int iy_, int iz_);
-		Vec3f VertexInterp(float isolevel, Vec3f p1, Vec3f p2, float valp1, float valp2);
-		int Polygonise(GRIDCELL grid, float isolevel, TRIANGLE *triangles);
-		int idx(int dimX, int dimY, int ix_, int iy_, int iz_);	
+		Vec3f interpolateVertex(float isolevel, Vec3f p1, Vec3f p2, float valp1, float valp2);
+		int polygonise(GRIDCELL grid, float isolevel, TRIANGLE *triangles);
+		int index(int dimX, int dimY, int ix_, int iy_, int iz_);	
 
+		
 };
 
 #endif

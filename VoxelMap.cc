@@ -30,7 +30,7 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	}
 
 	marchingCuber = new MarchingCuber();
-	triangles = marchingCuber->marchingCubes(&data, Vec3f(0,0,0), width, height, length, 0.2, 0.5);
+	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, 0.2, 0.5);
 }
 
 
