@@ -1,6 +1,12 @@
 #ifndef MARCHINGCUBERCONSTANTS_H
 #define MARCHINGCUBERCONSTANTS_H
 
+/*
+This implementation is based on the one by Paul Bourke
+which can be found on his website.
+http://paulbourke.net/geometry/polygonise/
+*/
+
 
 
 static const int edgeTable[256] = {

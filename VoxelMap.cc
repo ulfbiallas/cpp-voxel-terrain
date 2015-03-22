@@ -10,25 +10,14 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 
 	data = (float*) malloc(width * height * length * sizeof(float));
 
-	int w,h,l, iw, ih, il;
+	int w,h,l;
 	float heightInHeightMap;
-	int smoothRadius = 1;
 
 	for (w=0; w<width; ++w) {
-		for (l=0; l<length; ++l) {
-			for(h=0; h<height; ++h) {
+		for(h=0; h<height; ++h) {
+			for (l=0; l<length; ++l) {	
 
-				float density = 0.0f;
-				for(iw=-smoothRadius; iw<=smoothRadius; ++iw) {
-					for(ih=-smoothRadius; ih<=smoothRadius; ++ih) {
-						for(il=-smoothRadius; il<=smoothRadius; ++il) {
-							density += getVerticalDistanceFromHeightMap(heightMap, w+iw, h+ih, l+il);
-						}
-					}
-				}
-				density /= (float) ((2*smoothRadius+1) * (2*smoothRadius+1) * (2*smoothRadius+1));
-
-				data[index(w, h, l)] = density;
+				data[index(w, h, l)] = calculateDensityFromHeightMap(heightMap, w, h, l);
 				if(data[index(w, h, l)] < -1) data[index(w, h, l)] = -1;
 				if(data[index(w, h, l)] >  1) data[index(w, h, l)] =  1;
 
@@ -42,18 +31,37 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 
 
 
+VoxelMap::~VoxelMap() {
+	delete[] data;
+}
+
+
+
+float VoxelMap::calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, int l) {
+	int iw, ih, il;
+	float density = 0.0f;
+	int smoothRadius = 1;
+
+	for(iw=-smoothRadius; iw<=smoothRadius; ++iw) {
+		for(ih=-smoothRadius; ih<=smoothRadius; ++ih) {
+			for(il=-smoothRadius; il<=smoothRadius; ++il) {
+				density += getVerticalDistanceFromHeightMap(heightMap, w+iw, h+ih, l+il);
+			}
+		}
+	}
+	density /= (float) ((2*smoothRadius+1) * (2*smoothRadius+1) * (2*smoothRadius+1));
+
+	return density;
+}
+
+
+
 float VoxelMap::getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l) {
 	float heightInHeightMap = height * heightMap->getSmoothedHeight(w, l) / 255.0f;
 	float distance = heightInHeightMap - h;
 	if(distance < -1) distance = -1;
 	if(distance >  1) distance =  1;
 	return distance;
-}
-
-
-
-VoxelMap::~VoxelMap() {
-
 }
 
 

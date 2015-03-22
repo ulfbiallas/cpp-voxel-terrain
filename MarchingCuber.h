@@ -7,6 +7,13 @@
 #include "datatypes.h"
 #include "MarchingCuberConstants.h"
 
+/*
+This implementation is based on the one by Paul Bourke
+which can be found on his website.
+http://paulbourke.net/geometry/polygonise/
+*/
+
+
 
 class MarchingCuber {
 

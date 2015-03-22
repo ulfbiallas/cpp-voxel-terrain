@@ -32,6 +32,7 @@ class VoxelMap {
 		std::vector<MarchingCuber::TRIANGLE> triangles;
 
 		int index(int w, int h, int l);
+		float calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, int l);
 		float getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l);
 
 };
