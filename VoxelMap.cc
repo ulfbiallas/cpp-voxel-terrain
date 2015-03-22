@@ -10,25 +10,44 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 
 	data = (float*) malloc(width * height * length * sizeof(float));
 
-	int w,h,l;
+	int w,h,l, iw, ih, il;
 	float heightInHeightMap;
-	
+	int smoothRadius = 1;
+
 	for (w=0; w<width; ++w) {
 		for (l=0; l<length; ++l) {
-
-			heightInHeightMap = height * heightMap->getSmoothedHeight(w, l) / 255.0f;
-
 			for(h=0; h<height; ++h) {
-				data[index(w, h, l)] = heightInHeightMap - h;
-				if(data[index(w, h, l)] < 0) data[index(w, h, l)] = 0;
-				if(data[index(w, h, l)] > 1) data[index(w, h, l)] = 1;
-			}
 
+				float density = 0.0f;
+				for(iw=-smoothRadius; iw<=smoothRadius; ++iw) {
+					for(ih=-smoothRadius; ih<=smoothRadius; ++ih) {
+						for(il=-smoothRadius; il<=smoothRadius; ++il) {
+							density += getVerticalDistanceFromHeightMap(heightMap, w+iw, h+ih, l+il);
+						}
+					}
+				}
+				density /= (float) ((2*smoothRadius+1) * (2*smoothRadius+1) * (2*smoothRadius+1));
+
+				data[index(w, h, l)] = density;
+				if(data[index(w, h, l)] < -1) data[index(w, h, l)] = -1;
+				if(data[index(w, h, l)] >  1) data[index(w, h, l)] =  1;
+
+			}
 		}
 	}
 
 	marchingCuber = new MarchingCuber();
-	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, 0.2f, 0.5f);
+	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, 0.2f, 0.0f);
+}
+
+
+
+float VoxelMap::getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l) {
+	float heightInHeightMap = height * heightMap->getSmoothedHeight(w, l) / 255.0f;
+	float distance = heightInHeightMap - h;
+	if(distance < -1) distance = -1;
+	if(distance >  1) distance =  1;
+	return distance;
 }
 
 
