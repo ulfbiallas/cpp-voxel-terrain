@@ -16,14 +16,12 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	for (w=0; w<width; ++w) {
 		for (l=0; l<length; ++l) {
 
-			heightInHeightMap = height * heightMap->getHeight(w, l) / 255.0f;
+			heightInHeightMap = height * heightMap->getSmoothedHeight(w, l) / 255.0f;
 
 			for(h=0; h<height; ++h) {
-				if(h<heightInHeightMap) {
-					data[index(w, h, l)] = 1;
-				} else {
-					data[index(w, h, l)] = 0;
-				}
+				data[index(w, h, l)] = heightInHeightMap - h;
+				if(data[index(w, h, l)] < 0) data[index(w, h, l)] = 0;
+				if(data[index(w, h, l)] > 1) data[index(w, h, l)] = 1;
 			}
 
 		}

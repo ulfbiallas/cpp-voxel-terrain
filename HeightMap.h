@@ -19,6 +19,7 @@ class HeightMap {
 		int getWidth();
 		int getLength();
 		int getHeight(unsigned int w, unsigned int l);
+		float getSmoothedHeight(unsigned int w, unsigned int l);
 		int getMaxHeight();
 		bool wasSuccessful();
 

@@ -50,6 +50,23 @@ int HeightMap::getHeight(unsigned int w, unsigned int h) {
 
 
 
+float HeightMap::getSmoothedHeight(unsigned int w, unsigned int l) {
+	int iw, il;
+	float height = 0.0;
+	int smoothRadius = 2;
+	int cellAmount = (2*smoothRadius+1) * (2*smoothRadius+1);
+
+	for(iw=-smoothRadius; iw<=smoothRadius; ++iw) {
+		for(il=-smoothRadius; il<=smoothRadius; ++il) {
+			height += getHeight(w+iw, l+il);
+		}
+	}
+
+	return height / cellAmount;
+}
+
+
+
 int HeightMap::getMaxHeight() {
 	return (int) maxHeight;
 }
