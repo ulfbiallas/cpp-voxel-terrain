@@ -163,14 +163,9 @@ void display(void) {
 
 
 	if(mouserightdown) {
-		glDisable(GL_LIGHTING);
 		Vec3f intersectionPos = viewer_pos.add(rayDirection.mult(rayIntersection));
-		glPointSize(5.0f);
-		glColor3f(1.0, 0.0, 0.0);
-		glBegin(GL_POINTS);
-		glVertex3f(intersectionPos.x, intersectionPos.y, intersectionPos.z);
-		glEnd();
-		glEnable(GL_LIGHTING);
+		voxelMap->reduceDensityAtPoint(intersectionPos);
+		voxelMap->extractSurface();
 	}
 
 
@@ -264,6 +259,10 @@ void motion (int x, int y) {
 		Vec3f delta = mouse_pos.sub(mouse_pos_alt);
 		phi = phi_alt + 0.2f * delta.x;
 		theta = theta_alt - 0.2f * delta.y;
+	}
+	if(mouserightdown) {
+		rayDirection = getViewDirectionForScreenCoordinates(x,y);
+		rayIntersection = voxelMap->intersectRay(viewer_pos, rayDirection);
 	}
 }
 

@@ -25,13 +25,58 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	}
 
 	marchingCuber = new MarchingCuber();
-	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, voxelSize, 0.0f);
+	extractSurface();
 }
 
 
 
 VoxelMap::~VoxelMap() {
 	delete[] data;
+}
+
+
+
+void VoxelMap::extractSurface() {
+	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, voxelSize, 0.0f);
+}
+
+
+
+void VoxelMap::reduceDensityAtPoint(Vec3f point) {
+
+	float radius = 5;
+	float reductionFactor = 0.1;
+
+	float radius2 = radius * radius;
+	float distance;
+	float dDensity;
+	int rx,ry,rz, w, h, l;
+	Vec3f p = point.mult(1.0 / voxelSize);
+
+	for(rx=-radius; rx<=radius; ++rx) {
+		for(ry=-radius; ry<=radius; ++ry) {
+			for(rz=-radius; rz<=radius; ++rz) {
+
+				distance = sqrt((float) (rx*rx + ry*ry + rz*rz));
+
+				dDensity = distance - radius;
+				dDensity *= reductionFactor;
+				if(dDensity > 0) dDensity = 0;
+				if(dDensity < -1) dDensity = -1;
+				
+				w = p.x + rx;
+				h = p.y + ry;
+				l = p.z + rz;
+
+				if(w>=0 && w<width && h>=0 && h<height && l>=0 && l<length) {
+					data[index(w, h, l)] += dDensity;
+					if(data[index(w, h, l)] < -1) data[index(w, h, l)] = -1;
+					if(data[index(w, h, l)] >  1) data[index(w, h, l)] =  1;
+				}
+
+			}
+		}
+	}
 }
 
 

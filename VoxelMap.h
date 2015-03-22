@@ -23,6 +23,8 @@ class VoxelMap {
 		int getLength();
 		std::vector<MarchingCuber::TRIANGLE> getTriangles();
 		float intersectRay(Vec3f origin, Vec3f direction);
+		void extractSurface();
+		void reduceDensityAtPoint(Vec3f point);
 
 
 	private:
