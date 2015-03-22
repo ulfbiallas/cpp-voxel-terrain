@@ -7,12 +7,11 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	width = heightMap->getWidth();
 	length = heightMap->getLength();
 	height = 32;
+	voxelSize = 0.2f;
 
 	data = (float*) malloc(width * height * length * sizeof(float));
 
 	int w,h,l;
-	float heightInHeightMap;
-
 	for (w=0; w<width; ++w) {
 		for(h=0; h<height; ++h) {
 			for (l=0; l<length; ++l) {	
@@ -26,7 +25,7 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	}
 
 	marchingCuber = new MarchingCuber();
-	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, 0.2f, 0.0f);
+	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, voxelSize, 0.0f);
 }
 
 
@@ -96,6 +95,50 @@ int VoxelMap::getLength() {
 
 std::vector<MarchingCuber::TRIANGLE> VoxelMap::getTriangles() {
 	return triangles;
+}
+
+
+
+float VoxelMap::intersectRay(Vec3f origin, Vec3f direction) {
+	float minDist = 99999;
+	float t;
+
+	int w, h, l;
+	for (w=0; w<width; ++w) {
+		for(h=0; h<height; ++h) {
+			for (l=0; l<length; ++l) {	
+				if(data[index(w, h, l)] >= 0) {
+					if(isRayIntersectingVoxel(origin, direction, w, h, l)) {
+						Vec3f p = Vec3f((float) w, (float) h, (float) l).mult(voxelSize);
+						t = p.sub(origin).norm();
+						if(t >= 0) {
+							if(t < minDist) {
+								minDist = t;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return minDist;
+}
+
+
+
+bool VoxelMap::isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int h, int l) {
+	Vec3f p = Vec3f((float) w, (float) h, (float) l).mult(voxelSize);
+	Vec3f op = p.sub(origin);
+	float lambda = op.dot(direction);
+	Vec3f p2 = origin.add(direction.mult(lambda));
+	float dist = (p2.sub(p)).norm();
+	
+	if(dist*dist < 0.5 * voxelSize * 0.5 * voxelSize) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 

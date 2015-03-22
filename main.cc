@@ -38,19 +38,27 @@ GLfloat light_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
 GLfloat light_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
 GLfloat light_position[] = { 100.0, 100.0, 100.0, 1.0 };
 
+GLdouble matProjection[16];
+GLdouble matModelview[16];
+GLint viewport[4];
+
 HeightMap *heightMap;
 VoxelMap *voxelMap;
+
+Vec3f rayDirection;
+float rayIntersection = 0;
 
 
 
 int main(int argc, char ** argv);
 void display();
 void reshape(int width, int height);
-
 void mouse(int button, int state, int mx, int my);
 void motion (int x, int y);
 void keyboardDown(unsigned char key, int x, int y);
 void keyboardUp(unsigned char key, int x, int y);
+Vec3f getViewDirectionForScreenCoordinates(int x, int y);
+
 
 
 float inline random() {
@@ -69,9 +77,9 @@ int main(int argc, char ** argv) {
 
 	glutInit(&argc, argv);
 	glutInitWindowSize(640, 480);
-    glutInitDisplayMode ( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+	glutInitDisplayMode ( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutCreateWindow ("voxel terrain");
-    glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 
 	glLightfv(GL_LIGHT0,GL_AMBIENT, light_ambient);
 	glLightfv(GL_LIGHT0,GL_DIFFUSE, light_diffuse);
@@ -80,9 +88,9 @@ int main(int argc, char ** argv) {
 
 	glutReshapeFunc(reshape);
 	glutDisplayFunc(display);
-    glutKeyboardFunc(keyboardDown);
+	glutKeyboardFunc(keyboardDown);
 	glutKeyboardUpFunc(keyboardUp);
-    glutMouseFunc(mouse);
+	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 
 	glutMainLoop();
@@ -114,10 +122,10 @@ void display(void) {
 
 
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 	if(flag_m) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -125,9 +133,9 @@ void display(void) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
-    gluLookAt(viewer_pos.x, viewer_pos.y, viewer_pos.z,
-	          viewer_pos.x+viewer_dir.x, viewer_pos.y+viewer_dir.y, viewer_pos.z+viewer_dir.z,
-			  0, 1, 0);
+	gluLookAt(viewer_pos.x, viewer_pos.y, viewer_pos.z,
+				viewer_pos.x+viewer_dir.x, viewer_pos.y+viewer_dir.y, viewer_pos.z+viewer_dir.z,
+				0, 1, 0);
 
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	glColor3f(0,0,0);
@@ -154,6 +162,21 @@ void display(void) {
 	}
 
 
+	if(mouserightdown) {
+		glDisable(GL_LIGHTING);
+		Vec3f intersectionPos = viewer_pos.add(rayDirection.mult(rayIntersection));
+		glPointSize(5.0f);
+		glColor3f(1.0, 0.0, 0.0);
+		glBegin(GL_POINTS);
+		glVertex3f(intersectionPos.x, intersectionPos.y, intersectionPos.z);
+		glEnd();
+		glEnable(GL_LIGHTING);
+	}
+
+
+	glGetDoublev(GL_PROJECTION_MATRIX, matProjection);
+	glGetDoublev(GL_MODELVIEW_MATRIX, matModelview);
+	glGetIntegerv(GL_VIEWPORT, viewport);
 
 	glutSwapBuffers();
 	glutPostRedisplay();
@@ -233,6 +256,7 @@ void keyboardUp(unsigned char key, int x, int y) {
 }
 
 
+
 void motion (int x, int y) {
 	if(mousedown) {
 		mouse_pos.x = x;
@@ -242,6 +266,7 @@ void motion (int x, int y) {
 		theta = theta_alt - 0.2f * delta.y;
 	}
 }
+
 
 
 void mouse(int button, int state, int x, int y) {
@@ -259,6 +284,31 @@ void mouse(int button, int state, int x, int y) {
 				mousedown = false;
 			}
 			break;
+
+		case GLUT_RIGHT_BUTTON:
+			if( state == GLUT_DOWN ) {
+				mouserightdown = true;
+				rayDirection = getViewDirectionForScreenCoordinates(x,y);
+				rayIntersection = voxelMap->intersectRay(viewer_pos, rayDirection);
+			} else if( state == GLUT_UP )  {
+				mouserightdown = false;
+			}
+
+			break;
 	}
 }
 
+
+
+Vec3f getViewDirectionForScreenCoordinates(int x, int y) {
+	double realx = x;
+	double realy = viewport[3] - (int) y - 1;
+
+	GLdouble wNearX, wNearY, wNearZ;
+	gluUnProject( realx, realy, 0.0, matModelview, matProjection, viewport, &wNearX, &wNearY, &wNearZ);
+
+	GLdouble wFarX, wFarY, wFarZ; 
+	gluUnProject( realx,  realy, 1.0, matModelview, matProjection, viewport, &wFarX, &wFarY, &wFarZ);
+
+    return Vec3f(wFarX-wNearX, wFarY-wNearY, wFarZ-wNearZ).normalize();
+}
