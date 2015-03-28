@@ -7,9 +7,9 @@
 #include "lodepng.h"
 #include "HeightMap.h"
 #include "Chunk.h"
-#include "MarchingCuber.h"
 
 class Chunk;
+
 
 
 
@@ -20,7 +20,6 @@ class VoxelMap {
 		VoxelMap(HeightMap *heightMap);
 		~VoxelMap();
 
-		float getDensity(int w, int h, int l);
 		int getWidth();
 		int getHeight();
 		int getLength();
@@ -31,6 +30,7 @@ class VoxelMap {
 		float intersectRay(Vec3f origin, Vec3f direction);
 		void extractSurface();
 		void reduceDensityAtPoint(Vec3f point);
+		float getDensity(int w, int h, int l);
 
 
 
@@ -48,8 +48,6 @@ class VoxelMap {
 
 		int index(int w, int h, int l);
 		int chunkIndex(int w, int h, int l);
-		float calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, int l);
-		float getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l);
 		bool isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int h, int l);
 
 };

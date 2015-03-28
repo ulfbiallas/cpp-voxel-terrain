@@ -11,32 +11,20 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 
 	data = (float*) malloc(width * height * length * sizeof(float));
 
-	int w,h,l;
-	for (w=0; w<width; ++w) {
-		for(h=0; h<height; ++h) {
-			for (l=0; l<length; ++l) {	
-
-				data[index(w, h, l)] = calculateDensityFromHeightMap(heightMap, w, h, l);
-				if(data[index(w, h, l)] < -1) data[index(w, h, l)] = -1;
-				if(data[index(w, h, l)] >  1) data[index(w, h, l)] =  1;
-
-			}
-		}
-	}
-
 	chunkWidth = 16;
 	chunkHeight = 16;
 	chunkLength = 16;
 
-	chunksW = ceil((float) width / chunkWidth);
-	chunksH = ceil((float) height / chunkHeight);
-	chunksL = ceil((float) length / chunkLength);
+	chunksW = (int) ceil((float) width / chunkWidth);
+	chunksH = (int) ceil((float) height / chunkHeight);
+	chunksL = (int) ceil((float) length / chunkLength);
 
+	int w,h,l;
 	chunks = (Chunk**) malloc(chunksW * chunksH * chunksL * sizeof(Chunk*));
 	for (w=0; w<chunksW; ++w) {
 		for(h=0; h<chunksH; ++h) {
 			for (l=0; l<chunksL; ++l) {	
-				chunks[chunkIndex(w, h, l)] = new Chunk(w, h, l, this);
+				chunks[chunkIndex(w, h, l)] = new Chunk(w, h, l, heightMap, this);
 			}
 		}
 	}
@@ -68,14 +56,14 @@ void VoxelMap::extractSurface() {
 
 void VoxelMap::reduceDensityAtPoint(Vec3f point) {
 
-	float radius = 5;
-	float reductionFactor = 0.1;
+	int radius = 5;
+	float reductionFactor = 0.1f;
 
-	float radius2 = radius * radius;
+	int radius2 = radius * radius;
 	float distance;
 	float dDensity;
 	int rx,ry,rz, w, h, l;
-	Vec3f p = point.mult(1.0 / voxelSize);
+	Vec3f p = point.mult(1.0f / voxelSize);
 
 	for(rx=-radius; rx<=radius; ++rx) {
 		for(ry=-radius; ry<=radius; ++ry) {
@@ -88,9 +76,9 @@ void VoxelMap::reduceDensityAtPoint(Vec3f point) {
 				if(dDensity > 0) dDensity = 0;
 				if(dDensity < -1) dDensity = -1;
 				
-				w = p.x + rx;
-				h = p.y + ry;
-				l = p.z + rz;
+				w = (int) p.x + rx;
+				h = (int) p.y + ry;
+				l = (int) p.z + rz;
 
 				if(w>=0 && w<width && h>=0 && h<height && l>=0 && l<length) {
 					data[index(w, h, l)] += dDensity;
@@ -100,45 +88,6 @@ void VoxelMap::reduceDensityAtPoint(Vec3f point) {
 
 			}
 		}
-	}
-}
-
-
-
-float VoxelMap::calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, int l) {
-	int iw, ih, il;
-	float density = 0.0f;
-	int smoothRadius = 1;
-
-	for(iw=-smoothRadius; iw<=smoothRadius; ++iw) {
-		for(ih=-smoothRadius; ih<=smoothRadius; ++ih) {
-			for(il=-smoothRadius; il<=smoothRadius; ++il) {
-				density += getVerticalDistanceFromHeightMap(heightMap, w+iw, h+ih, l+il);
-			}
-		}
-	}
-	density /= (float) ((2*smoothRadius+1) * (2*smoothRadius+1) * (2*smoothRadius+1));
-
-	return density;
-}
-
-
-
-float VoxelMap::getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l) {
-	float heightInHeightMap = height * heightMap->getSmoothedHeight(w, l) / 255.0f;
-	float distance = heightInHeightMap - h;
-	if(distance < -1) distance = -1;
-	if(distance >  1) distance =  1;
-	return distance;
-}
-
-
-
-float VoxelMap::getDensity(int w, int h, int l) {
-	if(w>=0 && w<width && h>=0 && h<height && l>=0 && l<length) {
-		return data[index(w, h, l)];
-	} else {
-		return -1;
 	}
 }
 
@@ -226,6 +175,20 @@ bool VoxelMap::isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int 
 	} else {
 		return false;
 	}
+}
+
+
+
+float VoxelMap::getDensity(int w, int h, int l) {
+	int pw = w / chunkWidth;
+	int ph = h / chunkHeight;
+	int pl = l / chunkLength;
+
+	int cw = w % chunkWidth;
+	int ch = h % chunkHeight;
+	int cl = l & chunkLength;
+
+	return chunks[chunkIndex(pw, ph, pl)]->getDensity(cw, ch, cl);
 }
 
 
