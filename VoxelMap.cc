@@ -15,9 +15,9 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	chunkHeight = 16;
 	chunkLength = 16;
 
-	chunksW = (int) ceil((float) width / chunkWidth);
-	chunksH = (int) ceil((float) height / chunkHeight);
-	chunksL = (int) ceil((float) length / chunkLength);
+	chunksW = (int) ceil((float) width / chunkWidth) + 1;
+	chunksH = (int) ceil((float) height / chunkHeight) + 1;
+	chunksL = (int) ceil((float) length / chunkLength) + 1;
 
 	int w,h,l;
 	chunks = (Chunk**) malloc(chunksW * chunksH * chunksL * sizeof(Chunk*));
@@ -45,7 +45,7 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 			for (l=0; l<chunksL; ++l) {	
 
 				Vec3f position = Vec3f((float) w * chunkWidth, (float) h * chunkHeight, (float) l * chunkLength);
-				std::vector<TRIANGLE> chunkTriangles = marchingCuber->extractSurface(this, position, position.mult(voxelSize), chunkWidth, chunkHeight, chunkLength, voxelSize, 0.0f);
+				std::vector<TRIANGLE> chunkTriangles = marchingCuber->extractSurface(this, position, position.mult(voxelSize), chunkWidth+1, chunkHeight+1, chunkLength+1, voxelSize, 0.0f);
 
 				for (int k=0; k<chunkTriangles.size(); ++k) {
 					triangles.push_back(chunkTriangles[k]);
@@ -210,7 +210,7 @@ float VoxelMap::getDensity(int w, int h, int l) {
 	if(pw>=0 && pw<chunksW && ph>=0 && ph<chunksH && pl>=0 && pl<chunksL) {
 		return chunks[chunkIndex(pw, ph, pl)]->getDensity(cw, ch, cl);
 	} else {
-		return -1;
+		return -0.0001;
 	}
 	
 }
