@@ -24,6 +24,24 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 		}
 	}
 
+	chunkWidth = 16;
+	chunkHeight = 16;
+	chunkLength = 16;
+
+	chunksW = ceil((float) width / chunkWidth);
+	chunksH = ceil((float) height / chunkHeight);
+	chunksL = ceil((float) length / chunkLength);
+
+	chunks = (Chunk**) malloc(chunksW * chunksH * chunksL * sizeof(Chunk*));
+	for (w=0; w<chunksW; ++w) {
+		for(h=0; h<chunksH; ++h) {
+			for (l=0; l<chunksL; ++l) {	
+				chunks[chunkIndex(w, h, l)] = new Chunk(w, h, l);
+			}
+		}
+	}
+
+
 	marchingCuber = new MarchingCuber();
 	extractSurface();
 }
@@ -190,4 +208,10 @@ bool VoxelMap::isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int 
 
 int VoxelMap::index(int w, int h, int l) {
 	return l * (width * height) + h * width + w;
+}
+
+
+
+int VoxelMap::chunkIndex(int w, int h, int l) {
+	return l * (chunksW * chunksH) + h * chunksL + w;
 }

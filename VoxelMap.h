@@ -6,6 +6,7 @@
 #include <vector>
 #include "lodepng.h"
 #include "HeightMap.h"
+#include "Chunk.h"
 #include "MarchingCuber.h"
 
 
@@ -30,12 +31,17 @@ class VoxelMap {
 	private:
 
 		int width, height, length;
+		int chunkWidth, chunkHeight, chunkLength;
+		int chunksW, chunksH, chunksL;
+
+		Chunk **chunks;
 		float *data;
 		float voxelSize;
 		MarchingCuber *marchingCuber;
 		std::vector<MarchingCuber::TRIANGLE> triangles;
 
 		int index(int w, int h, int l);
+		int chunkIndex(int w, int h, int l);
 		float calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, int l);
 		float getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l);
 		bool isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int h, int l);
