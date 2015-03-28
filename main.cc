@@ -144,6 +144,7 @@ void display(void) {
 
 	if(heightMap->wasSuccessful()) {
 
+
 		int t, v;
 		vector<TRIANGLE> triangles = voxelMap->getTriangles();
 

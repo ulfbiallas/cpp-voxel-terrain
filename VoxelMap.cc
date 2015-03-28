@@ -32,11 +32,6 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 
 	marchingCuber = new MarchingCuber();
 
-	int chunkCount = chunksW * chunksH * chunksL;
-	for (int k=0; k<chunkCount; ++k) {
-		chunks[k]->calculateSurface(marchingCuber, voxelSize);
-	}
-
 	extractSurface();
 }
 
@@ -52,6 +47,7 @@ void VoxelMap::extractSurface() {
 	int chunkCount = chunksW * chunksH * chunksL;
 	triangles.clear();
 	for (int k=0; k<chunkCount; ++k) {
+		chunks[k]->calculateSurface(marchingCuber, voxelSize);
 		std::vector<TRIANGLE> *chunkTriangles = chunks[k]->getTriangles();
 		for (int t=chunkTriangles->size()-1; t>=0; --t) {
 			triangles.push_back((*chunkTriangles)[t]);
@@ -88,14 +84,13 @@ void VoxelMap::reduceDensityAtPoint(Vec3f point) {
 				l = (int) p.z + rz;
 
 				if(w>=0 && w<width && h>=0 && h<height && l>=0 && l<length) {
-					data[index(w, h, l)] += dDensity;
-					if(data[index(w, h, l)] < -1) data[index(w, h, l)] = -1;
-					if(data[index(w, h, l)] >  1) data[index(w, h, l)] =  1;
+					setDensity(w, h, l, getDensity(w, h, l) + dDensity);
 				}
 
 			}
 		}
 	}
+
 }
 
 
@@ -150,7 +145,7 @@ float VoxelMap::intersectRay(Vec3f origin, Vec3f direction) {
 	for (w=0; w<width; ++w) {
 		for(h=0; h<height; ++h) {
 			for (l=0; l<length; ++l) {	
-				if(data[index(w, h, l)] >= 0) {
+				if(getDensity(w,h,l) >= 0) {
 					if(isRayIntersectingVoxel(origin, direction, w, h, l)) {
 						Vec3f p = Vec3f((float) w, (float) h, (float) l).mult(voxelSize);
 						t = p.sub(origin).norm();
@@ -202,6 +197,22 @@ float VoxelMap::getDensity(int w, int h, int l) {
 		return -0.0001;
 	}
 	
+}
+
+
+
+void VoxelMap::setDensity(int w, int h, int l, float value) {
+	int pw = (int) floor((float) w / chunkWidth);
+	int ph = (int) floor((float) h / chunkHeight);
+	int pl = (int) floor((float) l / chunkLength);
+
+	int cw = w % chunkWidth;
+	int ch = h % chunkHeight;
+	int cl = l % chunkLength;
+
+	if(pw>=0 && pw<chunksW && ph>=0 && ph<chunksH && pl>=0 && pl<chunksL) {
+		chunks[chunkIndex(pw, ph, pl)]->setDensity(cw, ch, cl, value);
+	}
 }
 
 

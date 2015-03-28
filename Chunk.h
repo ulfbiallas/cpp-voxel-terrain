@@ -20,6 +20,7 @@ class Chunk {
 		~Chunk();
 		void calculateSurface(MarchingCuber *marchingCuber, float voxelSize);
 		float getDensity(int w, int h, int l);
+		void setDensity(int w, int h, int l, float value);
 		std::vector<TRIANGLE>* getTriangles();
 
 

@@ -31,7 +31,7 @@ class VoxelMap {
 		void extractSurface();
 		void reduceDensityAtPoint(Vec3f point);
 		float getDensity(int w, int h, int l);
-
+		void setDensity(int w, int h, int l, float value);
 
 
 	private:
