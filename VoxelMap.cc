@@ -36,14 +36,20 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	for (w=0; w<chunksW; ++w) {
 		for(h=0; h<chunksH; ++h) {
 			for (l=0; l<chunksL; ++l) {	
-				chunks[chunkIndex(w, h, l)] = new Chunk(w, h, l);
+				chunks[chunkIndex(w, h, l)] = new Chunk(w, h, l, this);
 			}
 		}
 	}
 
 
 	marchingCuber = new MarchingCuber();
-	extractSurface();
+	//extractSurface();
+
+	int chunkCount = chunksW * chunksH * chunksL;
+	for (int k=0; k<chunkCount; ++k) {
+		chunks[k]->extractSurface(marchingCuber, &triangles, voxelSize);
+	}
+
 }
 
 
@@ -55,7 +61,7 @@ VoxelMap::~VoxelMap() {
 
 
 void VoxelMap::extractSurface() {
-	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, voxelSize, 0.0f);
+//	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, voxelSize, 0.0f);
 }
 
 
@@ -132,7 +138,7 @@ float VoxelMap::getDensity(int w, int h, int l) {
 	if(w>=0 && w<width && h>=0 && h<height && l>=0 && l<length) {
 		return data[index(w, h, l)];
 	} else {
-		return 0;
+		return -1;
 	}
 }
 
@@ -152,6 +158,24 @@ int VoxelMap::getHeight() {
 
 int VoxelMap::getLength() {
 	return length;
+}
+
+
+
+int VoxelMap::getChunkWidth() {
+	return chunkWidth;
+}
+
+
+
+int VoxelMap::getChunkHeight() {
+	return chunkHeight;
+}
+
+
+
+int VoxelMap::getChunkLength() {
+	return chunkLength;
 }
 
 

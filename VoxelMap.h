@@ -9,6 +9,8 @@
 #include "Chunk.h"
 #include "MarchingCuber.h"
 
+class Chunk;
+
 
 
 class VoxelMap {
@@ -22,10 +24,14 @@ class VoxelMap {
 		int getWidth();
 		int getHeight();
 		int getLength();
+		int getChunkWidth();
+		int getChunkHeight();
+		int getChunkLength();
 		std::vector<MarchingCuber::TRIANGLE> getTriangles();
 		float intersectRay(Vec3f origin, Vec3f direction);
 		void extractSurface();
 		void reduceDensityAtPoint(Vec3f point);
+
 
 
 	private:
