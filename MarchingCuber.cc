@@ -8,7 +8,7 @@ http://paulbourke.net/geometry/polygonise/
 
 
 
-std::vector<MarchingCuber::TRIANGLE> MarchingCuber::extractSurface(float **voxels, Vec3f pos_, int dimX, int dimY, int dimZ, float h, float isolevel) {
+std::vector<TRIANGLE> MarchingCuber::extractSurface(float **voxels, Vec3f pos_, int dimX, int dimY, int dimZ, float h, float isolevel) {
 	
 	std::vector<TRIANGLE> triangles;
 	

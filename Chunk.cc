@@ -39,10 +39,10 @@ Chunk::~Chunk() {
 
 
 
-void Chunk::extractSurface(MarchingCuber *marchingCuber, std::vector<MarchingCuber::TRIANGLE>* triangles, float voxelSize) {
+void Chunk::extractSurface(MarchingCuber *marchingCuber, std::vector<TRIANGLE>* triangles, float voxelSize) {
 	Vec3f position = Vec3f((float) pw * width, (float) ph * height, (float) pl * length);
 	std::cout << "extract surface at: " << position.x << ", " << position.y << ", " << position.z << "\n";
-	std::vector<MarchingCuber::TRIANGLE> chunkTriangles = marchingCuber->extractSurface(&data, position.mult(voxelSize), width, height, length, voxelSize, 0.0f);
+	std::vector<TRIANGLE> chunkTriangles = marchingCuber->extractSurface(&data, position.mult(voxelSize), width, height, length, voxelSize, 0.0f);
 
 	for (int k=0; k<chunkTriangles.size(); ++k) {
 		triangles->push_back(chunkTriangles[k]);

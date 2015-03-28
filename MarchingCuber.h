@@ -18,28 +18,7 @@ http://paulbourke.net/geometry/polygonise/
 
 class MarchingCuber {
 
-	public:      
-
-		struct TRIANGLE {
-
-			Vec3f p[3], n[3];
-
-			TRIANGLE() {
-				p[0] = Vec3f();
-				p[1] = Vec3f();
-				p[2] = Vec3f();
-				n[0] = Vec3f();
-				n[1] = Vec3f();
-				n[2] = Vec3f();
-			};
-		};
-
-		struct GRIDCELL {
-		   Vec3f p[8];
-		   Vec3f n[8];
-		   float val[8];
-		};
-
+	public:
 
 		std::vector<TRIANGLE> extractSurface(float **voxels, Vec3f pos, int dimX, int dimY, int dimZ, float h, float isolevel);
 

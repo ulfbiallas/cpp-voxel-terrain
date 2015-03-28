@@ -1,9 +1,8 @@
-#ifndef DATATYPES_HH
-#define DATATYPES_HH
+#ifndef DATATYPES_H
+#define DATATYPES_H
 
 #include <cmath>
 #include <vector>
-
 
 
 
@@ -53,6 +52,30 @@ struct Vec3f {
 		float length = norm();
 		return Vec3f(x / length, y / length, z / length);
 	}
+};
+
+
+
+struct TRIANGLE {
+
+	Vec3f p[3], n[3];
+
+	TRIANGLE() {
+		p[0] = Vec3f();
+		p[1] = Vec3f();
+		p[2] = Vec3f();
+		n[0] = Vec3f();
+		n[1] = Vec3f();
+		n[2] = Vec3f();
+	};
+};
+
+
+
+struct GRIDCELL {
+	Vec3f p[8];
+	Vec3f n[8];
+	float val[8];
 };
 
 

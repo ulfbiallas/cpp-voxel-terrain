@@ -12,7 +12,6 @@ class Chunk;
 
 
 
-
 class VoxelMap {
 
     public:      
@@ -26,7 +25,7 @@ class VoxelMap {
 		int getChunkWidth();
 		int getChunkHeight();
 		int getChunkLength();
-		std::vector<MarchingCuber::TRIANGLE> getTriangles();
+		std::vector<TRIANGLE> getTriangles();
 		float intersectRay(Vec3f origin, Vec3f direction);
 		void extractSurface();
 		void reduceDensityAtPoint(Vec3f point);
@@ -44,7 +43,7 @@ class VoxelMap {
 		float *data;
 		float voxelSize;
 		MarchingCuber *marchingCuber;
-		std::vector<MarchingCuber::TRIANGLE> triangles;
+		std::vector<TRIANGLE> triangles;
 
 		int index(int w, int h, int l);
 		int chunkIndex(int w, int h, int l);

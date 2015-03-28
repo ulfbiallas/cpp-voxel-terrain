@@ -145,10 +145,10 @@ void display(void) {
 	if(heightMap->wasSuccessful()) {
 
 		int t, v;
-		vector<MarchingCuber::TRIANGLE> triangles = voxelMap->getTriangles();
+		vector<TRIANGLE> triangles = voxelMap->getTriangles();
 
 		glBegin(GL_TRIANGLES);
-		MarchingCuber::TRIANGLE triangle;
+		TRIANGLE triangle;
 		for(t=0; t<triangles.size(); ++t) {
 			triangle = triangles[t];
 			for(v=0; v<3; ++v) {

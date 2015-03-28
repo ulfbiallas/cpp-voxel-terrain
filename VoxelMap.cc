@@ -129,7 +129,7 @@ int VoxelMap::getChunkLength() {
 
 
 
-std::vector<MarchingCuber::TRIANGLE> VoxelMap::getTriangles() {
+std::vector<TRIANGLE> VoxelMap::getTriangles() {
 	return triangles;
 }
 
