@@ -31,6 +31,7 @@ class Chunk {
 		float *data;
 		VoxelMap *voxelMap;
 		std::vector<TRIANGLE> triangles;
+		bool hasChanged;
 
 		float calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, int l);
 		float getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l);

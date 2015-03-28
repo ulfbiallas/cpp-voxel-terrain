@@ -25,6 +25,7 @@ Chunk::Chunk(int pw, int ph, int pl, HeightMap *heightMap, VoxelMap *voxelMap) {
 		}
 	}
 
+	hasChanged = true;
 }
 
 
@@ -36,8 +37,11 @@ Chunk::~Chunk() {
 
 
 void Chunk::calculateSurface(MarchingCuber *marchingCuber, float voxelSize) {
-	Vec3f position = Vec3f((float) pw * width, (float) ph * height, (float) pl * length);
-	triangles = marchingCuber->extractSurface(voxelMap, position, position.mult(voxelSize), width+1, height+1, length+1, voxelSize, 0.0f);
+	if(hasChanged) {
+		Vec3f position = Vec3f((float) pw * width, (float) ph * height, (float) pl * length);
+		triangles = marchingCuber->extractSurface(voxelMap, position, position.mult(voxelSize), width+1, height+1, length+1, voxelSize, 0.0f);
+		hasChanged = false;
+	}
 }
 
 
@@ -59,6 +63,7 @@ void Chunk::setDensity(int w, int h, int l, float value) {
 	data[index(w, h, l)] = value;
 	if(data[index(w, h, l)] < -1) data[index(w, h, l)] = -1;
 	if(data[index(w, h, l)] >  1) data[index(w, h, l)] =  1;
+	hasChanged = true;
 }
 
 
