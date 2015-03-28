@@ -31,31 +31,13 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 
 
 	marchingCuber = new MarchingCuber();
-	//extractSurface();
 
-	/*
 	int chunkCount = chunksW * chunksH * chunksL;
 	for (int k=0; k<chunkCount; ++k) {
-		chunks[k]->extractSurface(marchingCuber, &triangles, voxelSize);
-	}
-	*/
-
-	for (w=0; w<chunksW; ++w) {
-		for(h=0; h<chunksH; ++h) {
-			for (l=0; l<chunksL; ++l) {	
-
-				Vec3f position = Vec3f((float) w * chunkWidth, (float) h * chunkHeight, (float) l * chunkLength);
-				std::vector<TRIANGLE> chunkTriangles = marchingCuber->extractSurface(this, position, position.mult(voxelSize), chunkWidth+1, chunkHeight+1, chunkLength+1, voxelSize, 0.0f);
-
-				for (int k=0; k<chunkTriangles.size(); ++k) {
-					triangles.push_back(chunkTriangles[k]);
-				}
-
-			}
-		}
+		chunks[k]->calculateSurface(marchingCuber, voxelSize);
 	}
 
-
+	extractSurface();
 }
 
 
@@ -67,7 +49,14 @@ VoxelMap::~VoxelMap() {
 
 
 void VoxelMap::extractSurface() {
-//	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, voxelSize, 0.0f);
+	int chunkCount = chunksW * chunksH * chunksL;
+	triangles.clear();
+	for (int k=0; k<chunkCount; ++k) {
+		std::vector<TRIANGLE> *chunkTriangles = chunks[k]->getTriangles();
+		for (int t=chunkTriangles->size()-1; t>=0; --t) {
+			triangles.push_back((*chunkTriangles)[t]);
+		}
+	}
 }
 
 

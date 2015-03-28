@@ -8,13 +8,9 @@ Chunk::Chunk(int pw, int ph, int pl, HeightMap *heightMap, VoxelMap *voxelMap) {
 	this->pl = pl;
 	this->voxelMap = voxelMap;
 
-	std::cout << "create chunk at: " << pw << ", " << ph << ", " << pl << "\n";
-
 	width = voxelMap->getChunkWidth();
 	height = voxelMap->getChunkHeight();
 	length = voxelMap->getChunkLength();
-
-	std::cout << "size: " << width << ", " << height << ", " << length << "\n";
 
 	data = (float*) malloc(width * height * length * sizeof(float));
 
@@ -38,21 +34,21 @@ Chunk::~Chunk() {
 }
 
 
-/*
-void Chunk::extractSurface(MarchingCuber *marchingCuber, std::vector<TRIANGLE>* triangles, float voxelSize) {
-	Vec3f position = Vec3f((float) pw * width, (float) ph * height, (float) pl * length);
-	std::cout << "extract surface at: " << position.x << ", " << position.y << ", " << position.z << "\n";
-	std::vector<TRIANGLE> chunkTriangles = marchingCuber->extractSurface(&data, position.mult(voxelSize), width, height, length, voxelSize, 0.0f);
 
-	for (int k=0; k<chunkTriangles.size(); ++k) {
-		triangles->push_back(chunkTriangles[k]);
-	}
+void Chunk::calculateSurface(MarchingCuber *marchingCuber, float voxelSize) {
+	Vec3f position = Vec3f((float) pw * width, (float) ph * height, (float) pl * length);
+	triangles = marchingCuber->extractSurface(voxelMap, position, position.mult(voxelSize), width+1, height+1, length+1, voxelSize, 0.0f);
 }
-*/
+
+
+
+std::vector<TRIANGLE>* Chunk::getTriangles() {
+	return &triangles;
+}
+
 
 
 float Chunk::getDensity(int w, int h, int l) {
-	//std::cout << "getDensity: " << w << ", " << h << ", " << l << " returns " << data[index(w, h, l)] << "\n";
 	return data[index(w, h, l)];
 }
 

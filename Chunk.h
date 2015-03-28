@@ -18,8 +18,9 @@ class Chunk {
 
 		Chunk(int pw, int ph, int pl, HeightMap *heightMap, VoxelMap *voxelMap);
 		~Chunk();
-		//void extractSurface(MarchingCuber *marchingCuber, std::vector<TRIANGLE>* triangles, float voxelSize);
+		void calculateSurface(MarchingCuber *marchingCuber, float voxelSize);
 		float getDensity(int w, int h, int l);
+		std::vector<TRIANGLE>* getTriangles();
 
 
 
@@ -28,6 +29,7 @@ class Chunk {
 		int width, height, length;
 		float *data;
 		VoxelMap *voxelMap;
+		std::vector<TRIANGLE> triangles;
 
 		float calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, int l);
 		float getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l);
