@@ -8,12 +8,17 @@ http://paulbourke.net/geometry/polygonise/
 
 
 
-std::vector<TRIANGLE> MarchingCuber::extractSurface(float **voxels, Vec3f pos_, int dimX, int dimY, int dimZ, float h, float isolevel) {
+std::vector<TRIANGLE> MarchingCuber::extractSurface(VoxelMap *voxelMap, Vec3f start, Vec3f pos_, int dimX, int dimY, int dimZ, float h, float isolevel) {
 	
 	std::vector<TRIANGLE> triangles;
 	
 	GRIDCELL grid;
 	TRIANGLE *temptriangles = (TRIANGLE*) malloc(5 * sizeof(TRIANGLE));
+
+	int spx, spy, spz;
+	spx = start.x;
+	spy = start.y;
+	spz = start.z;
 
 	float sz = 0.5f*h;
 	int k, ix, iy, iz;
@@ -36,23 +41,23 @@ std::vector<TRIANGLE> MarchingCuber::extractSurface(float **voxels, Vec3f pos_, 
 				grid.p[6] = ref.add(Vec3f(hx + sz, hy + sz, hz + sz));
 				grid.p[7] = ref.add(Vec3f(hx - sz, hy + sz, hz + sz));				
 				
-				grid.val[0] = (*voxels)[index(dimX, dimY, ix + 0, iy + 0, iz + 0)];
-				grid.val[1] = (*voxels)[index(dimX, dimY, ix + 1, iy + 0, iz + 0)];
-				grid.val[2] = (*voxels)[index(dimX, dimY, ix + 1, iy + 0, iz + 1)];
-				grid.val[3] = (*voxels)[index(dimX, dimY, ix + 0, iy + 0, iz + 1)];
-				grid.val[4] = (*voxels)[index(dimX, dimY, ix + 0, iy + 1, iz + 0)];
-				grid.val[5] = (*voxels)[index(dimX, dimY, ix + 1, iy + 1, iz + 0)];
-				grid.val[6] = (*voxels)[index(dimX, dimY, ix + 1, iy + 1, iz + 1)];
-				grid.val[7] = (*voxels)[index(dimX, dimY, ix + 0, iy + 1, iz + 1)];
+				grid.val[0] = voxelMap->getDensity(spx + ix + 0, spy + iy + 0, spz + iz + 0);
+				grid.val[1] = voxelMap->getDensity(spx + ix + 1, spy + iy + 0, spz + iz + 0);
+				grid.val[2] = voxelMap->getDensity(spx + ix + 1, spy + iy + 0, spz + iz + 1);
+				grid.val[3] = voxelMap->getDensity(spx + ix + 0, spy + iy + 0, spz + iz + 1);
+				grid.val[4] = voxelMap->getDensity(spx + ix + 0, spy + iy + 1, spz + iz + 0);
+				grid.val[5] = voxelMap->getDensity(spx + ix + 1, spy + iy + 1, spz + iz + 0);
+				grid.val[6] = voxelMap->getDensity(spx + ix + 1, spy + iy + 1, spz + iz + 1);
+				grid.val[7] = voxelMap->getDensity(spx + ix + 0, spy + iy + 1, spz + iz + 1);
 				
-				grid.n[0] = getGradient(voxels, dimX, dimY, dimZ, ix + 0, iy + 0, iz + 0);
-				grid.n[1] = getGradient(voxels, dimX, dimY, dimZ, ix + 1, iy + 0, iz + 0);
-				grid.n[2] = getGradient(voxels, dimX, dimY, dimZ, ix + 1, iy + 0, iz + 1);
-				grid.n[3] = getGradient(voxels, dimX, dimY, dimZ, ix + 0, iy + 0, iz + 1);
-				grid.n[4] = getGradient(voxels, dimX, dimY, dimZ, ix + 0, iy + 1, iz + 0);
-				grid.n[5] = getGradient(voxels, dimX, dimY, dimZ, ix + 1, iy + 1, iz + 0);
-				grid.n[6] = getGradient(voxels, dimX, dimY, dimZ, ix + 1, iy + 1, iz + 1);
-				grid.n[7] = getGradient(voxels, dimX, dimY, dimZ, ix + 0, iy + 1, iz + 1);
+				grid.n[0] = getGradient(voxelMap, dimX, dimY, dimZ, spx + ix + 0, spy + iy + 0, spz + iz + 0);
+				grid.n[1] = getGradient(voxelMap, dimX, dimY, dimZ, spx + ix + 1, spy + iy + 0, spz + iz + 0);
+				grid.n[2] = getGradient(voxelMap, dimX, dimY, dimZ, spx + ix + 1, spy + iy + 0, spz + iz + 1);
+				grid.n[3] = getGradient(voxelMap, dimX, dimY, dimZ, spx + ix + 0, spy + iy + 0, spz + iz + 1);
+				grid.n[4] = getGradient(voxelMap, dimX, dimY, dimZ, spx + ix + 0, spy + iy + 1, spz + iz + 0);
+				grid.n[5] = getGradient(voxelMap, dimX, dimY, dimZ, spx + ix + 1, spy + iy + 1, spz + iz + 0);
+				grid.n[6] = getGradient(voxelMap, dimX, dimY, dimZ, spx + ix + 1, spy + iy + 1, spz + iz + 1);
+				grid.n[7] = getGradient(voxelMap, dimX, dimY, dimZ, spx + ix + 0, spy + iy + 1, spz + iz + 1);
 				
 				int ntriang =  polygonise(grid, isolevel, temptriangles);
 
@@ -187,21 +192,19 @@ Vec3f MarchingCuber::interpolateVertex(float isolevel, Vec3f p1, Vec3f p2, float
 
 
 
-Vec3f MarchingCuber::getGradient(float **voxels, int dimX, int dimY, int dimZ, int ix_, int iy_, int iz_) {
-	if(ix_ >= 1 && iy_ >= 1 && iz_ >= 1 && ix_ < dimX-1 && iy_ < dimY-1 && iz_ < dimZ-1 ) {
+Vec3f MarchingCuber::getGradient(VoxelMap *voxelMap, int dimX, int dimY, int dimZ, int ix_, int iy_, int iz_) {
+
+	float dx = ( voxelMap->getDensity(ix_ - 1, iy_, iz_ ) - voxelMap->getDensity(ix_ + 1, iy_, iz_ ) );
+	float dy = ( voxelMap->getDensity(ix_, iy_ - 1, iz_ ) - voxelMap->getDensity(ix_, iy_ + 1, iz_ ) );
+	float dz = ( voxelMap->getDensity(ix_, iy_, iz_ - 1 ) - voxelMap->getDensity(ix_, iy_, iz_ + 1 ) );
 		
-		float dx = ( (*voxels)[index(dimX, dimY, ix_ - 1, iy_, iz_ )] - (*voxels)[index(dimX, dimY, ix_ + 1, iy_, iz_ )] );
-		float dy = ( (*voxels)[index(dimX, dimY, ix_, iy_ - 1, iz_ )] - (*voxels)[index(dimX, dimY, ix_, iy_ + 1, iz_ )] );
-		float dz = ( (*voxels)[index(dimX, dimY, ix_, iy_, iz_ - 1 )] - (*voxels)[index(dimX, dimY, ix_, iy_, iz_ + 1 )] );
-		
-		Vec3f n = Vec3f(dx, dy, dz);
-		if(n.norm() < 0.01) {
-			return Vec3f();
-		} else {
-			return n.normalize();
-		}
+	Vec3f n = Vec3f(dx, dy, dz);
+	if(n.norm() < 0.01) {
+		return Vec3f();
+	} else {
+		return n.normalize();
 	}
-	return Vec3f();
+
 }
 
 

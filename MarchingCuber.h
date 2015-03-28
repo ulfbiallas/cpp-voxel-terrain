@@ -6,6 +6,9 @@
 #include <vector>
 #include "datatypes.h"
 #include "MarchingCuberConstants.h"
+#include "VoxelMap.h"
+
+class VoxelMap;
 
 /*
 This implementation is based on the one by Paul Bourke
@@ -20,13 +23,13 @@ class MarchingCuber {
 
 	public:
 
-		std::vector<TRIANGLE> extractSurface(float **voxels, Vec3f pos, int dimX, int dimY, int dimZ, float h, float isolevel);
+		std::vector<TRIANGLE> extractSurface(VoxelMap *voxelMap, Vec3f start, Vec3f pos, int dimX, int dimY, int dimZ, float h, float isolevel);
 
 
 
 	private:
 		
-		Vec3f getGradient(float **voxels, int dimX, int dimY, int dimZ, int ix_, int iy_, int iz_);
+		Vec3f getGradient(VoxelMap *voxelMap, int dimX, int dimY, int dimZ, int ix_, int iy_, int iz_);
 		Vec3f interpolateVertex(float isolevel, Vec3f p1, Vec3f p2, float valp1, float valp2);
 		int polygonise(GRIDCELL grid, float isolevel, TRIANGLE *triangles);
 		int index(int dimX, int dimY, int ix_, int iy_, int iz_);	

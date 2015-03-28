@@ -8,6 +8,7 @@
 #include "VoxelMap.h"
 
 class VoxelMap;
+class MarchingCuber;
 
 
 
@@ -17,7 +18,7 @@ class Chunk {
 
 		Chunk(int pw, int ph, int pl, HeightMap *heightMap, VoxelMap *voxelMap);
 		~Chunk();
-		void extractSurface(MarchingCuber *marchingCuber, std::vector<TRIANGLE>* triangles, float voxelSize);
+		//void extractSurface(MarchingCuber *marchingCuber, std::vector<TRIANGLE>* triangles, float voxelSize);
 		float getDensity(int w, int h, int l);
 
 

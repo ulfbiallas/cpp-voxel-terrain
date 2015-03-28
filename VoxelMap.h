@@ -9,6 +9,7 @@
 #include "Chunk.h"
 
 class Chunk;
+class MarchingCuber;
 
 
 

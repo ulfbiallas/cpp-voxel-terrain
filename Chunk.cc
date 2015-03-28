@@ -38,7 +38,7 @@ Chunk::~Chunk() {
 }
 
 
-
+/*
 void Chunk::extractSurface(MarchingCuber *marchingCuber, std::vector<TRIANGLE>* triangles, float voxelSize) {
 	Vec3f position = Vec3f((float) pw * width, (float) ph * height, (float) pl * length);
 	std::cout << "extract surface at: " << position.x << ", " << position.y << ", " << position.z << "\n";
@@ -48,10 +48,11 @@ void Chunk::extractSurface(MarchingCuber *marchingCuber, std::vector<TRIANGLE>* 
 		triangles->push_back(chunkTriangles[k]);
 	}
 }
-
+*/
 
 
 float Chunk::getDensity(int w, int h, int l) {
+	//std::cout << "getDensity: " << w << ", " << h << ", " << l << " returns " << data[index(w, h, l)] << "\n";
 	return data[index(w, h, l)];
 }
 

@@ -33,10 +33,28 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	marchingCuber = new MarchingCuber();
 	//extractSurface();
 
+	/*
 	int chunkCount = chunksW * chunksH * chunksL;
 	for (int k=0; k<chunkCount; ++k) {
 		chunks[k]->extractSurface(marchingCuber, &triangles, voxelSize);
 	}
+	*/
+
+	for (w=0; w<chunksW; ++w) {
+		for(h=0; h<chunksH; ++h) {
+			for (l=0; l<chunksL; ++l) {	
+
+				Vec3f position = Vec3f((float) w * chunkWidth, (float) h * chunkHeight, (float) l * chunkLength);
+				std::vector<TRIANGLE> chunkTriangles = marchingCuber->extractSurface(this, position, position.mult(voxelSize), chunkWidth, chunkHeight, chunkLength, voxelSize, 0.0f);
+
+				for (int k=0; k<chunkTriangles.size(); ++k) {
+					triangles.push_back(chunkTriangles[k]);
+				}
+
+			}
+		}
+	}
+
 
 }
 
@@ -179,16 +197,22 @@ bool VoxelMap::isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int 
 
 
 
+
 float VoxelMap::getDensity(int w, int h, int l) {
-	int pw = w / chunkWidth;
-	int ph = h / chunkHeight;
-	int pl = l / chunkLength;
+	int pw = (int) floor((float) w / chunkWidth);
+	int ph = (int) floor((float) h / chunkHeight);
+	int pl = (int) floor((float) l / chunkLength);
 
 	int cw = w % chunkWidth;
 	int ch = h % chunkHeight;
-	int cl = l & chunkLength;
+	int cl = l % chunkLength;
 
-	return chunks[chunkIndex(pw, ph, pl)]->getDensity(cw, ch, cl);
+	if(pw>=0 && pw<chunksW && ph>=0 && ph<chunksH && pl>=0 && pl<chunksL) {
+		return chunks[chunkIndex(pw, ph, pl)]->getDensity(cw, ch, cl);
+	} else {
+		return -1;
+	}
+	
 }
 
 
@@ -200,5 +224,5 @@ int VoxelMap::index(int w, int h, int l) {
 
 
 int VoxelMap::chunkIndex(int w, int h, int l) {
-	return l * (chunksW * chunksH) + h * chunksL + w;
+	return l * (chunksW * chunksH) + h * chunksW + w;
 }
