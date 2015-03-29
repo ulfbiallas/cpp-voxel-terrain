@@ -24,6 +24,8 @@ bool flag_right = false;
 bool flag_m = false;
 bool mousedown = false;
 bool mouserightdown = false;
+int mouseX = 0;
+int mouseY = 0;
 float phi = 90;
 float phi_alt = 0;
 float theta = 0;
@@ -45,8 +47,8 @@ GLint viewport[4];
 HeightMap *heightMap;
 VoxelMap *voxelMap;
 
-Vec3f rayDirection;
-float rayIntersection = 0;
+//Vec3f rayDirection;
+//float rayIntersection = 0;
 
 
 
@@ -144,6 +146,16 @@ void display(void) {
 
 	if(heightMap->wasSuccessful()) {
 
+		if(mouserightdown) {
+			Vec3f rayDirection = getViewDirectionForScreenCoordinates(mouseX, mouseY);
+			float rayIntersection = voxelMap->intersectRay(viewer_pos, rayDirection);
+			Vec3f intersectionPos = viewer_pos.add(rayDirection.mult(rayIntersection));
+			voxelMap->reduceDensityAtPoint(intersectionPos);
+		}
+
+		voxelMap->extractSurface();
+
+
 
 		int t, v;
 		vector<TRIANGLE> triangles = voxelMap->getTriangles();
@@ -162,15 +174,6 @@ void display(void) {
 
 	}
 
-	voxelMap->extractSurface();
-	/*
-	if(mouserightdown) {
-		Vec3f intersectionPos = viewer_pos.add(rayDirection.mult(rayIntersection));
-		std::cout << intersectionPos.x << ", " << intersectionPos.y << ", " << intersectionPos.z << "\n";
-		voxelMap->reduceDensityAtPoint(intersectionPos);
-		
-	}
-	*/
 
 	glGetDoublev(GL_PROJECTION_MATRIX, matProjection);
 	glGetDoublev(GL_MODELVIEW_MATRIX, matModelview);
@@ -256,6 +259,8 @@ void keyboardUp(unsigned char key, int x, int y) {
 
 
 void motion (int x, int y) {
+	mouseX = x;
+	mouseY = y;
 	if(mousedown) {
 		mouse_pos.x = x;
 		mouse_pos.y = y;
@@ -263,17 +268,13 @@ void motion (int x, int y) {
 		phi = phi_alt + 0.2f * delta.x;
 		theta = theta_alt - 0.2f * delta.y;
 	}
-	if(mouserightdown) {
-		rayDirection = getViewDirectionForScreenCoordinates(x,y);
-		rayIntersection = voxelMap->intersectRay(viewer_pos, rayDirection);
-		Vec3f intersectionPos = viewer_pos.add(rayDirection.mult(rayIntersection));
-		voxelMap->reduceDensityAtPoint(intersectionPos);
-	}
 }
 
 
 
 void mouse(int button, int state, int x, int y) {
+	mouseX = x;
+	mouseY = y;
 	switch( button ) {
 		case GLUT_LEFT_BUTTON:
 			if( state == GLUT_DOWN ) {
@@ -292,10 +293,6 @@ void mouse(int button, int state, int x, int y) {
 		case GLUT_RIGHT_BUTTON:
 			if( state == GLUT_DOWN ) {
 				mouserightdown = true;
-				rayDirection = getViewDirectionForScreenCoordinates(x,y);
-				rayIntersection = voxelMap->intersectRay(viewer_pos, rayDirection);
-				Vec3f intersectionPos = viewer_pos.add(rayDirection.mult(rayIntersection));
-				voxelMap->reduceDensityAtPoint(intersectionPos);
 			} else if( state == GLUT_UP )  {
 				mouserightdown = false;
 			}
