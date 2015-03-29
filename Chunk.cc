@@ -87,7 +87,7 @@ float Chunk::calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, i
 
 
 float Chunk::getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l) {
-	float heightInHeightMap = height * heightMap->getSmoothedHeight(w-0.5*width, l-0.5*length) / 255.0f;
+	float heightInHeightMap = voxelMap->getHeight() * heightMap->getSmoothedHeight(w-0.5*width, l-0.5*length) / 255.0f;
 	float distance = heightInHeightMap - h;
 	if(distance < -1) distance = -1;
 	if(distance >  1) distance =  1;
