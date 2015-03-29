@@ -46,9 +46,9 @@ class VoxelMap {
 		MarchingCuber *marchingCuber;
 		std::vector<TRIANGLE> triangles;
 
-		int index(int w, int h, int l);
-		int chunkIndex(int w, int h, int l);
-		bool isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int h, int l);
+		inline int index(int w, int h, int l);
+		inline int chunkIndex(int w, int h, int l);
+		inline bool isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int h, int l);
 
 };
 

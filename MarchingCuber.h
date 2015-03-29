@@ -23,13 +23,13 @@ class MarchingCuber {
 
 	public:
 
-		std::vector<TRIANGLE> extractSurface(VoxelMap *voxelMap, Vec3f start, Vec3f pos, int dimX, int dimY, int dimZ, float h, float isolevel);
+		std::vector<TRIANGLE> extractSurface(VoxelMap * const voxelMap, Vec3f start, Vec3f pos, int dimX, int dimY, int dimZ, float h, float isolevel);
 
 
 
 	private:
 		
-		Vec3f getGradient(VoxelMap *voxelMap, int dimX, int dimY, int dimZ, int ix_, int iy_, int iz_);
+		Vec3f getGradient(VoxelMap * const voxelMap, int dimX, int dimY, int dimZ, int ix_, int iy_, int iz_);
 		Vec3f interpolateVertex(float isolevel, Vec3f p1, Vec3f p2, float valp1, float valp2);
 		int polygonise(GRIDCELL grid, float isolevel, TRIANGLE *triangles);
 		int index(int dimX, int dimY, int ix_, int iy_, int iz_);	

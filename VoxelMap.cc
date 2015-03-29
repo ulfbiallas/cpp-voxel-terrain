@@ -165,23 +165,6 @@ float VoxelMap::intersectRay(Vec3f origin, Vec3f direction) {
 
 
 
-bool VoxelMap::isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int h, int l) {
-	Vec3f p = Vec3f((float) w, (float) h, (float) l).mult(voxelSize);
-	Vec3f op = p.sub(origin);
-	float lambda = op.dot(direction);
-	Vec3f p2 = origin.add(direction.mult(lambda));
-	float dist = (p2.sub(p)).norm();
-	
-	if(dist*dist < 0.5 * voxelSize * 0.5 * voxelSize) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-
-
-
 float VoxelMap::getDensity(int w, int h, int l) {
 	int pw = (int) floor((float) w / chunkWidth);
 	int ph = (int) floor((float) h / chunkHeight);
@@ -217,12 +200,28 @@ void VoxelMap::setDensity(int w, int h, int l, float value) {
 
 
 
-int VoxelMap::index(int w, int h, int l) {
+inline int VoxelMap::index(int w, int h, int l) {
 	return l * (width * height) + h * width + w;
 }
 
 
 
-int VoxelMap::chunkIndex(int w, int h, int l) {
+inline int VoxelMap::chunkIndex(int w, int h, int l) {
 	return l * (chunksW * chunksH) + h * chunksW + w;
+}
+
+
+
+inline bool VoxelMap::isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int h, int l) {
+	Vec3f p = Vec3f((float) w, (float) h, (float) l).mult(voxelSize);
+	Vec3f op = p.sub(origin);
+	float lambda = op.dot(direction);
+	Vec3f p2 = origin.add(direction.mult(lambda));
+	float dist = (p2.sub(p)).norm();
+	
+	if(dist*dist < 0.5 * voxelSize * 0.5 * voxelSize) {
+		return true;
+	} else {
+		return false;
+	}
 }

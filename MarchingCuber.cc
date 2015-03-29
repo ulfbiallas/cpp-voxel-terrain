@@ -8,7 +8,7 @@ http://paulbourke.net/geometry/polygonise/
 
 
 
-std::vector<TRIANGLE> MarchingCuber::extractSurface(VoxelMap *voxelMap, Vec3f start, Vec3f pos_, int dimX, int dimY, int dimZ, float h, float isolevel) {
+std::vector<TRIANGLE> MarchingCuber::extractSurface(VoxelMap * const voxelMap, Vec3f start, Vec3f pos_, int dimX, int dimY, int dimZ, float h, float isolevel) {
 	
 	std::vector<TRIANGLE> triangles;
 	
@@ -192,7 +192,7 @@ Vec3f MarchingCuber::interpolateVertex(float isolevel, Vec3f p1, Vec3f p2, float
 
 
 
-Vec3f MarchingCuber::getGradient(VoxelMap *voxelMap, int dimX, int dimY, int dimZ, int ix_, int iy_, int iz_) {
+Vec3f MarchingCuber::getGradient(VoxelMap * const voxelMap, int dimX, int dimY, int dimZ, int ix_, int iy_, int iz_) {
 
 	float dx = ( voxelMap->getDensity(ix_ - 1, iy_, iz_ ) - voxelMap->getDensity(ix_ + 1, iy_, iz_ ) );
 	float dy = ( voxelMap->getDensity(ix_, iy_ - 1, iz_ ) - voxelMap->getDensity(ix_, iy_ + 1, iz_ ) );

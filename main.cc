@@ -162,13 +162,15 @@ void display(void) {
 
 	}
 
-
+	voxelMap->extractSurface();
+	/*
 	if(mouserightdown) {
 		Vec3f intersectionPos = viewer_pos.add(rayDirection.mult(rayIntersection));
+		std::cout << intersectionPos.x << ", " << intersectionPos.y << ", " << intersectionPos.z << "\n";
 		voxelMap->reduceDensityAtPoint(intersectionPos);
-		voxelMap->extractSurface();
+		
 	}
-
+	*/
 
 	glGetDoublev(GL_PROJECTION_MATRIX, matProjection);
 	glGetDoublev(GL_MODELVIEW_MATRIX, matModelview);
@@ -264,6 +266,8 @@ void motion (int x, int y) {
 	if(mouserightdown) {
 		rayDirection = getViewDirectionForScreenCoordinates(x,y);
 		rayIntersection = voxelMap->intersectRay(viewer_pos, rayDirection);
+		Vec3f intersectionPos = viewer_pos.add(rayDirection.mult(rayIntersection));
+		voxelMap->reduceDensityAtPoint(intersectionPos);
 	}
 }
 
@@ -290,6 +294,8 @@ void mouse(int button, int state, int x, int y) {
 				mouserightdown = true;
 				rayDirection = getViewDirectionForScreenCoordinates(x,y);
 				rayIntersection = voxelMap->intersectRay(viewer_pos, rayDirection);
+				Vec3f intersectionPos = viewer_pos.add(rayDirection.mult(rayIntersection));
+				voxelMap->reduceDensityAtPoint(intersectionPos);
 			} else if( state == GLUT_UP )  {
 				mouserightdown = false;
 			}

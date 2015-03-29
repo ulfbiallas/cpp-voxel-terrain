@@ -35,7 +35,7 @@ class Chunk {
 
 		float calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, int l);
 		float getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l);
-		int index(int w, int h, int l);
+		inline int index(int w, int h, int l);
 
 };
 

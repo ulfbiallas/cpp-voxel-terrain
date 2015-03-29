@@ -59,7 +59,6 @@ float Chunk::getDensity(int w, int h, int l) {
 
 
 void Chunk::setDensity(int w, int h, int l, float value) {
-	//std::cout << "set value from " << data[index(w, h, l)] << " to " << value << "\n";
 	data[index(w, h, l)] = value;
 	if(data[index(w, h, l)] < -1) data[index(w, h, l)] = -1;
 	if(data[index(w, h, l)] >  1) data[index(w, h, l)] =  1;
@@ -97,6 +96,6 @@ float Chunk::getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h
 
 
 
-int Chunk::index(int w, int h, int l) {
+inline int Chunk::index(int w, int h, int l) {
 	return l * (width * height) + h * width + w;
 }
