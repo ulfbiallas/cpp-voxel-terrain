@@ -15,7 +15,11 @@ class MarchingCuber;
 
 class VoxelMap {
 
-    public:      
+	
+
+    public:
+
+		enum DENSITY_CHANGE_METHOD {INCREASE, DECREASE};
 
 		VoxelMap(HeightMap *heightMap);
 		~VoxelMap();
@@ -29,10 +33,9 @@ class VoxelMap {
 		std::vector<TRIANGLE> getTriangles();
 		float intersectRay(Vec3f origin, Vec3f direction);
 		void extractSurface();
-		void reduceDensityAtPoint(Vec3f point);
+		void changeDensityAtPoint(Vec3f point, DENSITY_CHANGE_METHOD densityChangeMethod);
 		float getDensity(int w, int h, int l);
 		void setDensity(int w, int h, int l, float value);
-
 
 	private:
 

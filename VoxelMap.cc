@@ -57,7 +57,7 @@ void VoxelMap::extractSurface() {
 
 
 
-void VoxelMap::reduceDensityAtPoint(Vec3f point) {
+void VoxelMap::changeDensityAtPoint(Vec3f point, DENSITY_CHANGE_METHOD densityChangeMethod) {
 
 	int radius = 5;
 	float reductionFactor = 0.1f;
@@ -74,10 +74,21 @@ void VoxelMap::reduceDensityAtPoint(Vec3f point) {
 
 				distance = sqrt((float) (rx*rx + ry*ry + rz*rz));
 
-				dDensity = distance - radius;
-				dDensity *= reductionFactor;
-				if(dDensity > 0) dDensity = 0;
-				if(dDensity < -1) dDensity = -1;
+				if(densityChangeMethod == INCREASE) {
+
+					dDensity = radius - distance;
+					dDensity *= reductionFactor;
+					if(dDensity < 0) dDensity = 0;
+					if(dDensity > 1) dDensity = 1;
+
+				} else if(densityChangeMethod == DECREASE) {
+
+					dDensity = distance - radius;
+					dDensity *= reductionFactor;
+					if(dDensity > 0) dDensity = 0;
+					if(dDensity < -1) dDensity = -1;
+
+				}
 				
 				w = (int) p.x + rx;
 				h = (int) p.y + ry;

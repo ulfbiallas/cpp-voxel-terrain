@@ -36,6 +36,8 @@ Vec3f mouse_pos_alt;
 Vec3f viewer_pos = Vec3f(0, 0, -10);
 Vec3f viewer_dir;
 
+VoxelMap::DENSITY_CHANGE_METHOD densityChangeMethod = VoxelMap::DECREASE;
+
 GLfloat light_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
 GLfloat light_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
 GLfloat light_position[] = { 100.0, 100.0, 100.0, 1.0 };
@@ -46,9 +48,6 @@ GLint viewport[4];
 
 HeightMap *heightMap;
 VoxelMap *voxelMap;
-
-//Vec3f rayDirection;
-//float rayIntersection = 0;
 
 
 
@@ -150,7 +149,7 @@ void display(void) {
 			Vec3f rayDirection = getViewDirectionForScreenCoordinates(mouseX, mouseY);
 			float rayIntersection = voxelMap->intersectRay(viewer_pos, rayDirection);
 			Vec3f intersectionPos = viewer_pos.add(rayDirection.mult(rayIntersection));
-			voxelMap->reduceDensityAtPoint(intersectionPos);
+			voxelMap->changeDensityAtPoint(intersectionPos, densityChangeMethod);
 		}
 
 		voxelMap->extractSurface();
@@ -219,6 +218,16 @@ void keyboardDown(unsigned char key, int x, int y) {
 		case 'm':
 		{
 			flag_m = true;
+			break;
+		}
+		case '+':
+		{
+			densityChangeMethod = VoxelMap::INCREASE;
+			break;
+		}
+		case '-':
+		{
+			densityChangeMethod = VoxelMap::DECREASE;
 			break;
 		}
 	}
