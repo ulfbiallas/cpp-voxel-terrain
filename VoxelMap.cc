@@ -11,20 +11,27 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 
 	data = (float*) malloc(width * height * length * sizeof(float));
 
+	chunkWidth = 16;
+	chunkHeight = 16;
+	chunkLength = 16;
+
+	chunksW = (int) ceil((float) width / chunkWidth) + 1;
+	chunksH = (int) ceil((float) height / chunkHeight) + 1;
+	chunksL = (int) ceil((float) length / chunkLength) + 1;
+
 	int w,h,l;
-	for (w=0; w<width; ++w) {
-		for(h=0; h<height; ++h) {
-			for (l=0; l<length; ++l) {	
-
-				data[index(w, h, l)] = calculateDensityFromHeightMap(heightMap, w, h, l);
-				if(data[index(w, h, l)] < -1) data[index(w, h, l)] = -1;
-				if(data[index(w, h, l)] >  1) data[index(w, h, l)] =  1;
-
+	chunks = (Chunk**) malloc(chunksW * chunksH * chunksL * sizeof(Chunk*));
+	for (w=0; w<chunksW; ++w) {
+		for(h=0; h<chunksH; ++h) {
+			for (l=0; l<chunksL; ++l) {	
+				chunks[chunkIndex(w, h, l)] = new Chunk(w, h, l, heightMap, this);
 			}
 		}
 	}
 
+
 	marchingCuber = new MarchingCuber();
+
 	extractSurface();
 }
 
@@ -37,21 +44,29 @@ VoxelMap::~VoxelMap() {
 
 
 void VoxelMap::extractSurface() {
-	triangles = marchingCuber->extractSurface(&data, Vec3f(0,0,0), width, height, length, voxelSize, 0.0f);
+	int chunkCount = chunksW * chunksH * chunksL;
+	triangles.clear();
+	for (int k=0; k<chunkCount; ++k) {
+		chunks[k]->calculateSurface(marchingCuber, voxelSize);
+		std::vector<TRIANGLE> *chunkTriangles = chunks[k]->getTriangles();
+		for (int t=chunkTriangles->size()-1; t>=0; --t) {
+			triangles.push_back((*chunkTriangles)[t]);
+		}
+	}
 }
 
 
 
 void VoxelMap::reduceDensityAtPoint(Vec3f point) {
 
-	float radius = 5;
-	float reductionFactor = 0.1;
+	int radius = 5;
+	float reductionFactor = 0.1f;
 
-	float radius2 = radius * radius;
+	int radius2 = radius * radius;
 	float distance;
 	float dDensity;
 	int rx,ry,rz, w, h, l;
-	Vec3f p = point.mult(1.0 / voxelSize);
+	Vec3f p = point.mult(1.0f / voxelSize);
 
 	for(rx=-radius; rx<=radius; ++rx) {
 		for(ry=-radius; ry<=radius; ++ry) {
@@ -64,58 +79,18 @@ void VoxelMap::reduceDensityAtPoint(Vec3f point) {
 				if(dDensity > 0) dDensity = 0;
 				if(dDensity < -1) dDensity = -1;
 				
-				w = p.x + rx;
-				h = p.y + ry;
-				l = p.z + rz;
+				w = (int) p.x + rx;
+				h = (int) p.y + ry;
+				l = (int) p.z + rz;
 
 				if(w>=0 && w<width && h>=0 && h<height && l>=0 && l<length) {
-					data[index(w, h, l)] += dDensity;
-					if(data[index(w, h, l)] < -1) data[index(w, h, l)] = -1;
-					if(data[index(w, h, l)] >  1) data[index(w, h, l)] =  1;
+					setDensity(w, h, l, getDensity(w, h, l) + dDensity);
 				}
 
 			}
 		}
 	}
-}
 
-
-
-float VoxelMap::calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, int l) {
-	int iw, ih, il;
-	float density = 0.0f;
-	int smoothRadius = 1;
-
-	for(iw=-smoothRadius; iw<=smoothRadius; ++iw) {
-		for(ih=-smoothRadius; ih<=smoothRadius; ++ih) {
-			for(il=-smoothRadius; il<=smoothRadius; ++il) {
-				density += getVerticalDistanceFromHeightMap(heightMap, w+iw, h+ih, l+il);
-			}
-		}
-	}
-	density /= (float) ((2*smoothRadius+1) * (2*smoothRadius+1) * (2*smoothRadius+1));
-
-	return density;
-}
-
-
-
-float VoxelMap::getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l) {
-	float heightInHeightMap = height * heightMap->getSmoothedHeight(w, l) / 255.0f;
-	float distance = heightInHeightMap - h;
-	if(distance < -1) distance = -1;
-	if(distance >  1) distance =  1;
-	return distance;
-}
-
-
-
-float VoxelMap::getDensity(int w, int h, int l) {
-	if(w>=0 && w<width && h>=0 && h<height && l>=0 && l<length) {
-		return data[index(w, h, l)];
-	} else {
-		return 0;
-	}
 }
 
 
@@ -138,7 +113,25 @@ int VoxelMap::getLength() {
 
 
 
-std::vector<MarchingCuber::TRIANGLE> VoxelMap::getTriangles() {
+int VoxelMap::getChunkWidth() {
+	return chunkWidth;
+}
+
+
+
+int VoxelMap::getChunkHeight() {
+	return chunkHeight;
+}
+
+
+
+int VoxelMap::getChunkLength() {
+	return chunkLength;
+}
+
+
+
+std::vector<TRIANGLE> VoxelMap::getTriangles() {
 	return triangles;
 }
 
@@ -152,7 +145,7 @@ float VoxelMap::intersectRay(Vec3f origin, Vec3f direction) {
 	for (w=0; w<width; ++w) {
 		for(h=0; h<height; ++h) {
 			for (l=0; l<length; ++l) {	
-				if(data[index(w, h, l)] >= 0) {
+				if(getDensity(w,h,l) >= 0) {
 					if(isRayIntersectingVoxel(origin, direction, w, h, l)) {
 						Vec3f p = Vec3f((float) w, (float) h, (float) l).mult(voxelSize);
 						t = p.sub(origin).norm();
@@ -172,7 +165,54 @@ float VoxelMap::intersectRay(Vec3f origin, Vec3f direction) {
 
 
 
-bool VoxelMap::isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int h, int l) {
+float VoxelMap::getDensity(int w, int h, int l) {
+	int pw = (int) floor((float) w / chunkWidth);
+	int ph = (int) floor((float) h / chunkHeight);
+	int pl = (int) floor((float) l / chunkLength);
+
+	int cw = w % chunkWidth;
+	int ch = h % chunkHeight;
+	int cl = l % chunkLength;
+
+	if(pw>=0 && pw<chunksW && ph>=0 && ph<chunksH && pl>=0 && pl<chunksL) {
+		return chunks[chunkIndex(pw, ph, pl)]->getDensity(cw, ch, cl);
+	} else {
+		return -0.0001;
+	}
+	
+}
+
+
+
+void VoxelMap::setDensity(int w, int h, int l, float value) {
+	int pw = (int) floor((float) w / chunkWidth);
+	int ph = (int) floor((float) h / chunkHeight);
+	int pl = (int) floor((float) l / chunkLength);
+
+	int cw = w % chunkWidth;
+	int ch = h % chunkHeight;
+	int cl = l % chunkLength;
+
+	if(pw>=0 && pw<chunksW && ph>=0 && ph<chunksH && pl>=0 && pl<chunksL) {
+		chunks[chunkIndex(pw, ph, pl)]->setDensity(cw, ch, cl, value);
+	}
+}
+
+
+
+inline int VoxelMap::index(int w, int h, int l) {
+	return l * (width * height) + h * width + w;
+}
+
+
+
+inline int VoxelMap::chunkIndex(int w, int h, int l) {
+	return l * (chunksW * chunksH) + h * chunksW + w;
+}
+
+
+
+inline bool VoxelMap::isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int h, int l) {
 	Vec3f p = Vec3f((float) w, (float) h, (float) l).mult(voxelSize);
 	Vec3f op = p.sub(origin);
 	float lambda = op.dot(direction);
@@ -184,10 +224,4 @@ bool VoxelMap::isRayIntersectingVoxel(Vec3f origin, Vec3f direction, int w, int 
 	} else {
 		return false;
 	}
-}
-
-
-
-int VoxelMap::index(int w, int h, int l) {
-	return l * (width * height) + h * width + w;
 }
