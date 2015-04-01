@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <iostream>
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include <math.h>
@@ -13,7 +14,7 @@
 #include "VoxelMap.h"
 
 
-
+#define Shader(shaderCode) #shaderCode
 #define PI 3.1415926535
 
 using namespace std;
@@ -51,6 +52,22 @@ HeightMap *heightMap;
 VoxelMap *voxelMap;
 
 GLuint texture;
+GLuint vertexShader, fragmentShader, shaderProgram;
+
+
+
+const char* vertexShaderSrc = Shader(
+	void main() {
+		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+	}
+);
+
+const char* fragmentShaderSrc = Shader(
+	void main(void) {
+		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	}
+);
+
 
 
 int main(int argc, char ** argv);
@@ -62,6 +79,8 @@ void keyboardDown(unsigned char key, int x, int y);
 void keyboardUp(unsigned char key, int x, int y);
 Vec3f getViewDirectionForScreenCoordinates(int x, int y);
 void loadTexture(char filename_[], GLuint* texture_);
+void createShader();
+
 
 
 float inline random() {
@@ -83,6 +102,13 @@ int main(int argc, char ** argv) {
     glutInitDisplayMode ( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutCreateWindow ("voxel terrain");
 	glEnable(GL_DEPTH_TEST);
+
+	glewInit();
+	if (glewIsSupported("GL_VERSION_2_1")) {
+		if (GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader && GL_EXT_geometry_shader4) {
+			createShader();
+		}
+	}
 
     loadTexture("texture.png", &texture);
 
@@ -165,8 +191,13 @@ void display(void) {
 		int t, v;
 		vector<TRIANGLE> triangles = voxelMap->getTriangles();
 
+		/*
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, texture);
+		*/
+
+		glUseProgram(shaderProgram);
+
 		glBegin(GL_TRIANGLES);
 
 		TRIANGLE triangle;
@@ -181,7 +212,10 @@ void display(void) {
 		}
 
 		glEnd();
-		glDisable(GL_TEXTURE_2D);
+
+		glUseProgram(0); 
+
+		//glDisable(GL_TEXTURE_2D);
 	}
 	
 		
@@ -365,4 +399,22 @@ void loadTexture(char filename_[], GLuint* texture_) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+}
+
+
+
+void createShader() {
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+	glShaderSource(vertexShader, 1, &vertexShaderSrc, NULL);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSrc, NULL);
+
+	glCompileShader(vertexShader);
+	glCompileShader(fragmentShader);
+
+	shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, fragmentShader);
+	glAttachShader(shaderProgram, vertexShader);
+	glLinkProgram(shaderProgram);
 }
