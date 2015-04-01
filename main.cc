@@ -7,6 +7,7 @@
 #include <math.h>
 #include <ctime>
 
+#include "lodepng.h"
 #include "datatypes.h"
 #include "HeightMap.h"
 #include "VoxelMap.h"
@@ -49,6 +50,7 @@ GLint viewport[4];
 HeightMap *heightMap;
 VoxelMap *voxelMap;
 
+GLuint texture;
 
 
 int main(int argc, char ** argv);
@@ -59,7 +61,7 @@ void motion (int x, int y);
 void keyboardDown(unsigned char key, int x, int y);
 void keyboardUp(unsigned char key, int x, int y);
 Vec3f getViewDirectionForScreenCoordinates(int x, int y);
-
+void loadTexture(char filename_[], GLuint* texture_);
 
 
 float inline random() {
@@ -76,33 +78,36 @@ int main(int argc, char ** argv) {
 	voxelMap = new VoxelMap(heightMap);
 
 
-	glutInit(&argc, argv);
-	glutInitWindowSize(640, 480);
-	glutInitDisplayMode ( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutCreateWindow ("voxel terrain");
+    glutInit(&argc, argv);
+    glutInitWindowSize(640, 480);
+    glutInitDisplayMode ( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+    glutCreateWindow ("voxel terrain");
 	glEnable(GL_DEPTH_TEST);
 
+    loadTexture("texture.png", &texture);
+
+	/*
 	glLightfv(GL_LIGHT0,GL_AMBIENT, light_ambient);
 	glLightfv(GL_LIGHT0,GL_DIFFUSE, light_diffuse);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
+	*/
 
-	glutReshapeFunc(reshape);
-	glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    glutDisplayFunc(display);
 	glutKeyboardFunc(keyboardDown);
 	glutKeyboardUpFunc(keyboardUp);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 
-	glutMainLoop();
+    glutMainLoop();
 
-	return 0;
+    return 0;
 }
 
 
 
 void display(void) {
-
 
 	viewer_dir.x = cos(2*PI * phi / 360) * cos(2*PI * theta / 360);
 	viewer_dir.y = sin(2*PI * theta / 360);
@@ -122,7 +127,6 @@ void display(void) {
 
 
 
-
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -138,8 +142,10 @@ void display(void) {
 				viewer_pos.x+viewer_dir.x, viewer_pos.y+viewer_dir.y, viewer_pos.z+viewer_dir.z,
 				0, 1, 0);
 
+	/*
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	glColor3f(0,0,0);
+	*/
 
 
 
@@ -159,21 +165,26 @@ void display(void) {
 		int t, v;
 		vector<TRIANGLE> triangles = voxelMap->getTriangles();
 
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, texture);
 		glBegin(GL_TRIANGLES);
+
 		TRIANGLE triangle;
 		for(t=0; t<triangles.size(); ++t) {
 			triangle = triangles[t];
 			for(v=0; v<3; ++v) {
+				glTexCoord2f(triangle.p[v].x, triangle.p[v].z);
 				glNormal3f(triangle.n[v].x, triangle.n[v].y, triangle.n[v].z);
 				glVertex3f(triangle.p[v].x, triangle.p[v].y, triangle.p[v].z);
 			}
 			
 		}
+
 		glEnd();
-
+		glDisable(GL_TEXTURE_2D);
 	}
-
-
+	
+		
 	glGetDoublev(GL_PROJECTION_MATRIX, matProjection);
 	glGetDoublev(GL_MODELVIEW_MATRIX, matModelview);
 	glGetIntegerv(GL_VIEWPORT, viewport);
@@ -323,4 +334,35 @@ Vec3f getViewDirectionForScreenCoordinates(int x, int y) {
 	gluUnProject( realx,  realy, 1.0, matModelview, matProjection, viewport, &wFarX, &wFarY, &wFarZ);
 
     return Vec3f(wFarX-wNearX, wFarY-wNearY, wFarZ-wNearZ).normalize();
+}
+
+
+
+void loadTexture(char filename_[], GLuint* texture_) {
+	int texWidth, texHeight;
+	unsigned error;
+	unsigned char* image;
+	unsigned texWidthc, texHeightc;
+	error = lodepng_decode32_file(&image, &texWidthc, &texHeightc, filename_);
+	texWidth = texWidthc;
+	texHeight = texHeightc;
+	std::vector<unsigned char> data(texWidth * texHeight * 4);
+	int x, y, c;
+	int r,g,b,a, idx;
+	int grayval;
+	for(y = 0; y < texHeight; y++) {
+	  for(x = 0; x < texWidth; x++) {
+	 	for(c = 0; c < 4; c++) {
+		 data[4 * texWidth * y + 4 * x + c] = image[4 * texWidth * y + 4 * x + c];
+  		}
+	  }
+	}
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glGenTextures( 1, texture_ );
+	glBindTexture( GL_TEXTURE_2D, *texture_ );
+	glTexImage2D(GL_TEXTURE_2D, 0, 4, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
