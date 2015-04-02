@@ -57,14 +57,21 @@ GLuint vertexShader, fragmentShader, shaderProgram;
 
 
 const char* vertexShaderSrc = Shader(
+	varying vec4 position;
+	
 	void main() {
+		position = gl_Vertex;
 		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 	}
 );
 
 const char* fragmentShaderSrc = Shader(
+	uniform sampler2D texture0;
+	varying vec4 position;
+
 	void main(void) {
-		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+		vec4 color  = texture2D(texture0, position.xz);
+		gl_FragColor = color;
 	}
 );
 
@@ -191,12 +198,13 @@ void display(void) {
 		int t, v;
 		vector<TRIANGLE> triangles = voxelMap->getTriangles();
 
-		/*
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		*/
-
 		glUseProgram(shaderProgram);
+
+		glEnable(GL_TEXTURE_2D);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		
+		glUniform1iARB(glGetUniformLocationARB(shaderProgram, "texture0"), 0); 
 
 		glBegin(GL_TRIANGLES);
 
@@ -204,7 +212,7 @@ void display(void) {
 		for(t=0; t<triangles.size(); ++t) {
 			triangle = triangles[t];
 			for(v=0; v<3; ++v) {
-				glTexCoord2f(triangle.p[v].x, triangle.p[v].z);
+				//glTexCoord2f(triangle.p[v].x, triangle.p[v].z);
 				glNormal3f(triangle.n[v].x, triangle.n[v].y, triangle.n[v].z);
 				glVertex3f(triangle.p[v].x, triangle.p[v].y, triangle.p[v].z);
 			}
@@ -215,7 +223,7 @@ void display(void) {
 
 		glUseProgram(0); 
 
-		//glDisable(GL_TEXTURE_2D);
+		glDisable(GL_TEXTURE_2D);
 	}
 	
 		
