@@ -58,9 +58,11 @@ GLuint vertexShader, fragmentShader, shaderProgram;
 
 const char* vertexShaderSrc = Shader(
 	varying vec4 position;
-	
+	varying vec3 normal;
+
 	void main() {
 		position = gl_Vertex;
+		normal = gl_Normal;
 		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 	}
 );
@@ -68,9 +70,20 @@ const char* vertexShaderSrc = Shader(
 const char* fragmentShaderSrc = Shader(
 	uniform sampler2D texture0;
 	varying vec4 position;
+	varying vec3 normal;
 
 	void main(void) {
-		vec4 color  = texture2D(texture0, position.xz);
+		vec3 n = abs(normal);
+
+		//n = normalize(n);
+		//float sum = n.x + n.y + n.z;
+		//n = n / sum;
+
+		vec4 colorX = texture2D(texture0, position.yz);
+		vec4 colorY = texture2D(texture0, position.xz);
+		vec4 colorZ = texture2D(texture0, position.xy);
+	
+		vec4 color = colorX * n.x + colorY * n.y + colorZ * n.z;
 		gl_FragColor = color;
 	}
 );
