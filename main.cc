@@ -32,7 +32,7 @@ float phi = 90;
 float phi_alt = 0;
 float theta = 0;
 float theta_alt = 0;
-float walkspeed = 0.02f;
+float walkspeed = 0.05f;
 Vec3f mouse_pos;
 Vec3f mouse_pos_alt;
 Vec3f viewer_pos = Vec3f(0, 0, -10);
@@ -59,32 +59,46 @@ GLuint vertexShader, fragmentShader, shaderProgram;
 const char* vertexShaderSrc = Shader(
 	varying vec4 position;
 	varying vec3 normal;
+	varying vec3 transformedNormal;
 
 	void main() {
 		position = gl_Vertex;
 		normal = gl_Normal;
 		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+		transformedNormal = normalize(gl_NormalMatrix * gl_Normal);
 	}
 );
+
+
 
 const char* fragmentShaderSrc = Shader(
 	uniform sampler2D texture0;
 	varying vec4 position;
 	varying vec3 normal;
+	varying vec3 transformedNormal;
+
+	vec4 triplanarMapping(sampler2D texture, vec4 position, vec3 normal) {
+		vec3 n = abs(normal);
+		vec4 colorX = texture2D(texture, position.yz);
+		vec4 colorY = texture2D(texture, position.xz);
+		vec4 colorZ = texture2D(texture, position.xy);
+		return colorX * n.x + colorY * n.y + colorZ * n.z;
+	}
 
 	void main(void) {
-		vec3 n = abs(normal);
+		vec4 diffuse = triplanarMapping(texture0, position, normal);
 
-		//n = normalize(n);
-		//float sum = n.x + n.y + n.z;
-		//n = n / sum;
+		int numLightSources = 1;
+		vec4 finalColor = diffuse * 0.2;
 
-		vec4 colorX = texture2D(texture0, position.yz);
-		vec4 colorY = texture2D(texture0, position.xz);
-		vec4 colorZ = texture2D(texture0, position.xy);
-	
-		vec4 color = colorX * n.x + colorY * n.y + colorZ * n.z;
-		gl_FragColor = color;
+		for(int i = 0; i < numLightSources; i++) {
+			vec3 lightDir = normalize(vec3(gl_LightSource[i].position));
+			float  NdotL = max(dot(transformedNormal, lightDir), 0.0);
+			vec4 diffuseC = diffuse * gl_LightSource[i].diffuse * NdotL;
+			finalColor += diffuseC;
+		}	  
+
+		gl_FragColor = finalColor;
 	}
 );
 
@@ -132,12 +146,10 @@ int main(int argc, char ** argv) {
 
     loadTexture("texture.png", &texture);
 
-	/*
 	glLightfv(GL_LIGHT0,GL_AMBIENT, light_ambient);
 	glLightfv(GL_LIGHT0,GL_DIFFUSE, light_diffuse);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-	*/
 
     glutReshapeFunc(reshape);
     glutDisplayFunc(display);
@@ -188,10 +200,7 @@ void display(void) {
 				viewer_pos.x+viewer_dir.x, viewer_pos.y+viewer_dir.y, viewer_pos.z+viewer_dir.z,
 				0, 1, 0);
 
-	/*
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	glColor3f(0,0,0);
-	*/
 
 
 
