@@ -2,17 +2,19 @@
 
 #include <windows.h>
 #include <iostream>
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include <math.h>
 #include <ctime>
 
+#include "lodepng.h"
 #include "datatypes.h"
 #include "HeightMap.h"
 #include "VoxelMap.h"
 
 
-
+#define Shader(version, code)  "#version " #version "\n" #code
 #define PI 3.1415926535
 
 using namespace std;
@@ -30,7 +32,7 @@ float phi = 90;
 float phi_alt = 0;
 float theta = 0;
 float theta_alt = 0;
-float walkspeed = 0.02f;
+float walkspeed = 0.05f;
 Vec3f mouse_pos;
 Vec3f mouse_pos_alt;
 Vec3f viewer_pos = Vec3f(0, 0, -10);
@@ -49,6 +51,71 @@ GLint viewport[4];
 HeightMap *heightMap;
 VoxelMap *voxelMap;
 
+GLuint texture_grass;
+GLuint texture_rock;
+GLuint vertexShader, fragmentShader, shaderProgram;
+
+
+
+const char* vertexShaderSrc = Shader(140,
+	varying vec4 position;
+	varying vec3 normal;
+	varying vec3 transformedNormal;
+
+	void main() {
+		position = gl_Vertex;
+		normal = gl_Normal;
+		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+		transformedNormal = normalize(gl_NormalMatrix * gl_Normal);
+	}
+);
+
+
+
+const char* fragmentShaderSrc = Shader(140,
+	uniform sampler2D texture0;
+	uniform sampler2D texture1;
+	varying vec4 position;
+	varying vec3 normal;
+	varying vec3 transformedNormal;
+
+	vec4 triplanarMapping(sampler2D texture, vec4 position, vec3 normal) {
+		vec3 n = abs(normal);
+		vec4 colorX = texture2D(texture, position.yz);
+		vec4 colorY = texture2D(texture, position.xz);
+		vec4 colorZ = texture2D(texture, position.xy);
+		return colorX * n.x + colorY * n.y + colorZ * n.z;
+	}
+
+	void main(void) {
+		vec4 diffuse;
+		vec4 colorGrass = triplanarMapping(texture0, position, normal);
+		vec4 colorRock = triplanarMapping(texture1, position, normal);
+
+		if(normal.y > 0.85) {
+			diffuse = colorGrass;
+		} else if (normal.y >= 0.7 && normal.y <= 0.85){
+			float y = normal.y - 0.7;
+			y /= 0.15;
+			diffuse = colorGrass * y + colorRock * (1.0-y);
+		} else {
+			diffuse = colorRock;
+		}
+		
+		int numLightSources = 1;
+		vec4 finalColor = diffuse * 0.2;
+
+		for(int i = 0; i < numLightSources; i++) {
+			vec3 lightDir = normalize(vec3(gl_LightSource[i].position));
+			float  NdotL = max(dot(transformedNormal, lightDir), 0.0);
+			vec4 diffuseC = diffuse * gl_LightSource[i].diffuse * NdotL;
+			finalColor += diffuseC;
+		}	  
+
+		gl_FragColor = finalColor;
+	}
+);
+
 
 
 int main(int argc, char ** argv);
@@ -59,6 +126,8 @@ void motion (int x, int y);
 void keyboardDown(unsigned char key, int x, int y);
 void keyboardUp(unsigned char key, int x, int y);
 Vec3f getViewDirectionForScreenCoordinates(int x, int y);
+void loadTexture(char filename_[], GLuint* texture_);
+void createShader();
 
 
 
@@ -76,33 +145,42 @@ int main(int argc, char ** argv) {
 	voxelMap = new VoxelMap(heightMap);
 
 
-	glutInit(&argc, argv);
-	glutInitWindowSize(640, 480);
-	glutInitDisplayMode ( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutCreateWindow ("voxel terrain");
+    glutInit(&argc, argv);
+    glutInitWindowSize(640, 480);
+    glutInitDisplayMode ( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+    glutCreateWindow ("voxel terrain");
 	glEnable(GL_DEPTH_TEST);
+
+	glewInit();
+	if (glewIsSupported("GL_VERSION_2_1")) {
+		if (GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader && GL_EXT_geometry_shader4) {
+			createShader();
+		}
+	}
+
+    loadTexture("texture_grass.png", &texture_grass);
+	loadTexture("texture_rock.png", &texture_rock);
 
 	glLightfv(GL_LIGHT0,GL_AMBIENT, light_ambient);
 	glLightfv(GL_LIGHT0,GL_DIFFUSE, light_diffuse);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	glutReshapeFunc(reshape);
-	glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    glutDisplayFunc(display);
 	glutKeyboardFunc(keyboardDown);
 	glutKeyboardUpFunc(keyboardUp);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 
-	glutMainLoop();
+    glutMainLoop();
 
-	return 0;
+    return 0;
 }
 
 
 
 void display(void) {
-
 
 	viewer_dir.x = cos(2*PI * phi / 360) * cos(2*PI * theta / 360);
 	viewer_dir.y = sin(2*PI * theta / 360);
@@ -122,7 +200,6 @@ void display(void) {
 
 
 
-
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -139,7 +216,6 @@ void display(void) {
 				0, 1, 0);
 
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	glColor3f(0,0,0);
 
 
 
@@ -159,21 +235,38 @@ void display(void) {
 		int t, v;
 		vector<TRIANGLE> triangles = voxelMap->getTriangles();
 
+		glUseProgram(shaderProgram);
+
+		glEnable(GL_TEXTURE_2D);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture_grass);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture_rock);
+
+		glUniform1iARB(glGetUniformLocationARB(shaderProgram, "texture0"), 0); 
+		glUniform1iARB(glGetUniformLocationARB(shaderProgram, "texture1"), 1); 
+
 		glBegin(GL_TRIANGLES);
+
 		TRIANGLE triangle;
 		for(t=0; t<triangles.size(); ++t) {
 			triangle = triangles[t];
 			for(v=0; v<3; ++v) {
+				//glTexCoord2f(triangle.p[v].x, triangle.p[v].z);
 				glNormal3f(triangle.n[v].x, triangle.n[v].y, triangle.n[v].z);
 				glVertex3f(triangle.p[v].x, triangle.p[v].y, triangle.p[v].z);
 			}
 			
 		}
+
 		glEnd();
 
+		glUseProgram(0); 
+
+		glDisable(GL_TEXTURE_2D);
 	}
-
-
+	
+		
 	glGetDoublev(GL_PROJECTION_MATRIX, matProjection);
 	glGetDoublev(GL_MODELVIEW_MATRIX, matModelview);
 	glGetIntegerv(GL_VIEWPORT, viewport);
@@ -323,4 +416,53 @@ Vec3f getViewDirectionForScreenCoordinates(int x, int y) {
 	gluUnProject( realx,  realy, 1.0, matModelview, matProjection, viewport, &wFarX, &wFarY, &wFarZ);
 
     return Vec3f(wFarX-wNearX, wFarY-wNearY, wFarZ-wNearZ).normalize();
+}
+
+
+
+void loadTexture(char filename_[], GLuint* texture_) {
+	int texWidth, texHeight;
+	unsigned error;
+	unsigned char* image;
+	unsigned texWidthc, texHeightc;
+	error = lodepng_decode32_file(&image, &texWidthc, &texHeightc, filename_);
+	texWidth = texWidthc;
+	texHeight = texHeightc;
+	std::vector<unsigned char> data(texWidth * texHeight * 4);
+	int x, y, c;
+	int r,g,b,a, idx;
+	int grayval;
+	for(y = 0; y < texHeight; y++) {
+	  for(x = 0; x < texWidth; x++) {
+	 	for(c = 0; c < 4; c++) {
+		 data[4 * texWidth * y + 4 * x + c] = image[4 * texWidth * y + 4 * x + c];
+  		}
+	  }
+	}
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glGenTextures( 1, texture_ );
+	glBindTexture( GL_TEXTURE_2D, *texture_ );
+	glTexImage2D(GL_TEXTURE_2D, 0, 4, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+}
+
+
+
+void createShader() {
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+	glShaderSource(vertexShader, 1, &vertexShaderSrc, NULL);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSrc, NULL);
+
+	glCompileShader(vertexShader);
+	glCompileShader(fragmentShader);
+
+	shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, fragmentShader);
+	glAttachShader(shaderProgram, vertexShader);
+	glLinkProgram(shaderProgram);
 }
