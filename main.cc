@@ -14,7 +14,7 @@
 #include "VoxelMap.h"
 
 
-#define Shader(shaderCode) #shaderCode
+#define Shader(version, code)  "#version " #version "\n" #code
 #define PI 3.1415926535
 
 using namespace std;
@@ -51,12 +51,13 @@ GLint viewport[4];
 HeightMap *heightMap;
 VoxelMap *voxelMap;
 
-GLuint texture;
+GLuint texture_grass;
+GLuint texture_rock;
 GLuint vertexShader, fragmentShader, shaderProgram;
 
 
 
-const char* vertexShaderSrc = Shader(
+const char* vertexShaderSrc = Shader(140,
 	varying vec4 position;
 	varying vec3 normal;
 	varying vec3 transformedNormal;
@@ -71,8 +72,9 @@ const char* vertexShaderSrc = Shader(
 
 
 
-const char* fragmentShaderSrc = Shader(
+const char* fragmentShaderSrc = Shader(140,
 	uniform sampler2D texture0;
+	uniform sampler2D texture1;
 	varying vec4 position;
 	varying vec3 normal;
 	varying vec3 transformedNormal;
@@ -86,8 +88,20 @@ const char* fragmentShaderSrc = Shader(
 	}
 
 	void main(void) {
-		vec4 diffuse = triplanarMapping(texture0, position, normal);
+		vec4 diffuse;
+		vec4 colorGrass = triplanarMapping(texture0, position, normal);
+		vec4 colorRock = triplanarMapping(texture1, position, normal);
 
+		if(normal.y > 0.85) {
+			diffuse = colorGrass;
+		} else if (normal.y >= 0.7 && normal.y <= 0.85){
+			float y = normal.y - 0.7;
+			y /= 0.15;
+			diffuse = colorGrass * y + colorRock * (1.0-y);
+		} else {
+			diffuse = colorRock;
+		}
+		
 		int numLightSources = 1;
 		vec4 finalColor = diffuse * 0.2;
 
@@ -144,7 +158,8 @@ int main(int argc, char ** argv) {
 		}
 	}
 
-    loadTexture("texture.png", &texture);
+    loadTexture("texture_grass.png", &texture_grass);
+	loadTexture("texture_rock.png", &texture_rock);
 
 	glLightfv(GL_LIGHT0,GL_AMBIENT, light_ambient);
 	glLightfv(GL_LIGHT0,GL_DIFFUSE, light_diffuse);
@@ -224,9 +239,12 @@ void display(void) {
 
 		glEnable(GL_TEXTURE_2D);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		
+		glBindTexture(GL_TEXTURE_2D, texture_grass);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture_rock);
+
 		glUniform1iARB(glGetUniformLocationARB(shaderProgram, "texture0"), 0); 
+		glUniform1iARB(glGetUniformLocationARB(shaderProgram, "texture1"), 1); 
 
 		glBegin(GL_TRIANGLES);
 
