@@ -39,7 +39,7 @@ Chunk::~Chunk() {
 void Chunk::calculateSurface(MarchingCuber *marchingCuber, float voxelSize) {
 	if(hasChanged) {
 		Vec3f position = Vec3f((float) pw * width, (float) ph * height, (float) pl * length);
-		triangles = marchingCuber->extractSurface(voxelMap, position, position.mult(voxelSize), width+1, height+1, length+1, voxelSize, 0.0f);
+		triangles = marchingCuber->extractSurface(voxelMap, position, position.mult(voxelSize), width, height, length, voxelSize, 0.0f);
 		hasChanged = false;
 	}
 }
@@ -87,7 +87,8 @@ float Chunk::calculateDensityFromHeightMap(HeightMap *heightMap, int w, int h, i
 
 
 float Chunk::getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h, int l) {
-	float heightInHeightMap = voxelMap->getHeight() * heightMap->getSmoothedHeight(w-0.5*width, l-0.5*length) / 255.0f;
+	float minHeight = 3.0f;
+	float heightInHeightMap = minHeight + voxelMap->getHeight() * heightMap->getSmoothedHeight(w-0.5*width, l-0.5*length) / 255.0f;
 	float distance = heightInHeightMap - h;
 	if(distance < -1) distance = -1;
 	if(distance >  1) distance =  1;

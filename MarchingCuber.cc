@@ -22,9 +22,9 @@ std::vector<TRIANGLE> MarchingCuber::extractSurface(VoxelMap * const voxelMap, V
 
 	float sz = 0.5f*h;
 	int k, ix, iy, iz;
-	for(iz=0; iz<dimZ-1; ++iz) {
-		for(iy=0; iy<dimY-1; ++iy) {
-			for(ix=0; ix<dimX-1; ++ix) {
+	for(iz=0; iz<dimZ; ++iz) {
+		for(iy=0; iy<dimY; ++iy) {
+			for(ix=0; ix<dimX; ++ix) {
 	
 				Vec3f ref = pos_;
 				

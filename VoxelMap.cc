@@ -19,6 +19,9 @@ VoxelMap::VoxelMap(HeightMap *heightMap) {
 	chunksH = (int) ceil((float) height / chunkHeight) + 1;
 	chunksL = (int) ceil((float) length / chunkLength) + 1;
 
+	width = chunksW * chunkWidth + 1;
+	length = chunksL * chunkLength + 1;
+
 	int w,h,l;
 	chunks = (Chunk**) malloc(chunksW * chunksH * chunksL * sizeof(Chunk*));
 	for (w=0; w<chunksW; ++w) {
