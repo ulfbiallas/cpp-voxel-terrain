@@ -15,7 +15,7 @@ set(GLEW_LIBRARY glew64)
 
 
 
-add_executable(main main.cc HeightMap.cc VoxelMap.cc MarchingCuber.cc Chunk.cc Texture.cc lodepng.cc)
+add_executable(main main.cc HeightMap.cc VoxelMap.cc MarchingCuber.cc Chunk.cc Texture.cc Shader.cc lodepng.cc)
 
 include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
 target_link_libraries(main ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${GLEW_LIBRARY} )

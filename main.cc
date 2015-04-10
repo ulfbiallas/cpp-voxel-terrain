@@ -13,10 +13,10 @@
 #include "HeightMap.h"
 #include "VoxelMap.h"
 #include "Texture.h"
+#include "Shader.h"
 
 
 
-#define Shader(version, code)  "#version " #version "\n" #code
 #define PI 3.1415926535
 
 using namespace std;
@@ -55,69 +55,7 @@ VoxelMap *voxelMap;
 
 Texture *texture_grass;
 Texture *texture_rock;
-GLuint vertexShader, fragmentShader, shaderProgram;
-
-
-
-const char* vertexShaderSrc = Shader(140,
-	varying vec4 position;
-	varying vec3 normal;
-	varying vec3 transformedNormal;
-
-	void main() {
-		position = gl_Vertex;
-		normal = gl_Normal;
-		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-		transformedNormal = normalize(gl_NormalMatrix * gl_Normal);
-	}
-);
-
-
-
-const char* fragmentShaderSrc = Shader(140,
-	uniform sampler2D texture0;
-	uniform sampler2D texture1;
-	varying vec4 position;
-	varying vec3 normal;
-	varying vec3 transformedNormal;
-
-	vec4 triplanarMapping(sampler2D texture, vec4 position, vec3 normal) {
-		vec3 n = abs(normal);
-		vec4 colorX = texture2D(texture, position.yz);
-		vec4 colorY = texture2D(texture, position.xz);
-		vec4 colorZ = texture2D(texture, position.xy);
-		return colorX * n.x + colorY * n.y + colorZ * n.z;
-	}
-
-	void main(void) {
-		vec4 diffuse;
-		vec4 colorGrass = triplanarMapping(texture0, position, normal);
-		vec4 colorRock = triplanarMapping(texture1, position, normal);
-
-		if(normal.y > 0.85) {
-			diffuse = colorGrass;
-		} else if (normal.y >= 0.7 && normal.y <= 0.85){
-			float y = normal.y - 0.7;
-			y /= 0.15;
-			diffuse = colorGrass * y + colorRock * (1.0-y);
-		} else {
-			diffuse = colorRock;
-		}
-		
-		int numLightSources = 1;
-		vec4 finalColor = diffuse * 0.2;
-
-		for(int i = 0; i < numLightSources; i++) {
-			vec3 lightDir = normalize(vec3(gl_LightSource[i].position));
-			float  NdotL = max(dot(transformedNormal, lightDir), 0.0);
-			vec4 diffuseC = diffuse * gl_LightSource[i].diffuse * NdotL;
-			finalColor += diffuseC;
-		}	  
-
-		gl_FragColor = finalColor;
-	}
-);
-
+Shader *shader;
 
 
 int main(int argc, char ** argv);
@@ -128,7 +66,6 @@ void motion (int x, int y);
 void keyboardDown(unsigned char key, int x, int y);
 void keyboardUp(unsigned char key, int x, int y);
 Vec3f getViewDirectionForScreenCoordinates(int x, int y);
-void createShader();
 
 
 
@@ -155,7 +92,7 @@ int main(int argc, char ** argv) {
 	glewInit();
 	if (glewIsSupported("GL_VERSION_2_1")) {
 		if (GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader && GL_EXT_geometry_shader4) {
-			createShader();
+			shader = new Shader();
 		}
 	}
 
@@ -236,7 +173,7 @@ void display(void) {
 		int t, v;
 		vector<TRIANGLE> triangles = voxelMap->getTriangles();
 
-		glUseProgram(shaderProgram);
+		glUseProgram(shader->getProgram());
 
 		glEnable(GL_TEXTURE_2D);
 		glActiveTexture(GL_TEXTURE0);
@@ -244,8 +181,8 @@ void display(void) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture_rock->getData());
 
-		glUniform1iARB(glGetUniformLocationARB(shaderProgram, "texture0"), 0); 
-		glUniform1iARB(glGetUniformLocationARB(shaderProgram, "texture1"), 1); 
+		glUniform1iARB(glGetUniformLocationARB(shader->getProgram(), "texture0"), 0); 
+		glUniform1iARB(glGetUniformLocationARB(shader->getProgram(), "texture1"), 1); 
 
 		glBegin(GL_TRIANGLES);
 
@@ -417,22 +354,4 @@ Vec3f getViewDirectionForScreenCoordinates(int x, int y) {
 	gluUnProject( realx,  realy, 1.0, matModelview, matProjection, viewport, &wFarX, &wFarY, &wFarZ);
 
     return Vec3f(wFarX-wNearX, wFarY-wNearY, wFarZ-wNearZ).normalize();
-}
-
-
-
-void createShader() {
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-	glShaderSource(vertexShader, 1, &vertexShaderSrc, NULL);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSrc, NULL);
-
-	glCompileShader(vertexShader);
-	glCompileShader(fragmentShader);
-
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, fragmentShader);
-	glAttachShader(shaderProgram, vertexShader);
-	glLinkProgram(shaderProgram);
 }
