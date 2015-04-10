@@ -12,6 +12,8 @@
 #include "datatypes.h"
 #include "HeightMap.h"
 #include "VoxelMap.h"
+#include "Texture.h"
+
 
 
 #define Shader(version, code)  "#version " #version "\n" #code
@@ -51,8 +53,8 @@ GLint viewport[4];
 HeightMap *heightMap;
 VoxelMap *voxelMap;
 
-GLuint texture_grass;
-GLuint texture_rock;
+Texture *texture_grass;
+Texture *texture_rock;
 GLuint vertexShader, fragmentShader, shaderProgram;
 
 
@@ -126,7 +128,6 @@ void motion (int x, int y);
 void keyboardDown(unsigned char key, int x, int y);
 void keyboardUp(unsigned char key, int x, int y);
 Vec3f getViewDirectionForScreenCoordinates(int x, int y);
-void loadTexture(char filename_[], GLuint* texture_);
 void createShader();
 
 
@@ -158,8 +159,8 @@ int main(int argc, char ** argv) {
 		}
 	}
 
-    loadTexture("texture_grass.png", &texture_grass);
-	loadTexture("texture_rock.png", &texture_rock);
+	texture_grass = new Texture("texture_grass.png");
+	texture_rock = new Texture("texture_rock.png");
 
 	glLightfv(GL_LIGHT0,GL_AMBIENT, light_ambient);
 	glLightfv(GL_LIGHT0,GL_DIFFUSE, light_diffuse);
@@ -239,9 +240,9 @@ void display(void) {
 
 		glEnable(GL_TEXTURE_2D);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture_grass);
+		glBindTexture(GL_TEXTURE_2D, texture_grass->getData());
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture_rock);
+		glBindTexture(GL_TEXTURE_2D, texture_rock->getData());
 
 		glUniform1iARB(glGetUniformLocationARB(shaderProgram, "texture0"), 0); 
 		glUniform1iARB(glGetUniformLocationARB(shaderProgram, "texture1"), 1); 
@@ -416,37 +417,6 @@ Vec3f getViewDirectionForScreenCoordinates(int x, int y) {
 	gluUnProject( realx,  realy, 1.0, matModelview, matProjection, viewport, &wFarX, &wFarY, &wFarZ);
 
     return Vec3f(wFarX-wNearX, wFarY-wNearY, wFarZ-wNearZ).normalize();
-}
-
-
-
-void loadTexture(char filename_[], GLuint* texture_) {
-	int texWidth, texHeight;
-	unsigned error;
-	unsigned char* image;
-	unsigned texWidthc, texHeightc;
-	error = lodepng_decode32_file(&image, &texWidthc, &texHeightc, filename_);
-	texWidth = texWidthc;
-	texHeight = texHeightc;
-	std::vector<unsigned char> data(texWidth * texHeight * 4);
-	int x, y, c;
-	int r,g,b,a, idx;
-	int grayval;
-	for(y = 0; y < texHeight; y++) {
-	  for(x = 0; x < texWidth; x++) {
-	 	for(c = 0; c < 4; c++) {
-		 data[4 * texWidth * y + 4 * x + c] = image[4 * texWidth * y + 4 * x + c];
-  		}
-	  }
-	}
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glGenTextures( 1, texture_ );
-	glBindTexture( GL_TEXTURE_2D, *texture_ );
-	glTexImage2D(GL_TEXTURE_2D, 0, 4, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 
 
