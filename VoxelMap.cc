@@ -188,6 +188,15 @@ float VoxelMap::getDensity(int w, int h, int l) {
 	int ch = h % chunkHeight;
 	int cl = l % chunkLength;
 
+	if(pw==chunksW && cw==0) {
+		pw = chunksW-1;
+		cw = chunkWidth-1;
+	}
+	if(pl==chunksL && cl==0) {
+		pl = chunksL-1;
+		cl = chunkLength-1;
+	}
+
 	if(pw>=0 && pw<chunksW && ph>=0 && ph<chunksH && pl>=0 && pl<chunksL) {
 		return chunks[chunkIndex(pw, ph, pl)]->getDensity(cw, ch, cl);
 	} else {
