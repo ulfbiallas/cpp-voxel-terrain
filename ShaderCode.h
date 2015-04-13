@@ -8,12 +8,14 @@
 static const char* vertexShaderSrc = ShaderCode(140,
 	varying vec4 position;
 	varying vec3 normal;
+	varying vec4 transformedPosition;
 	varying vec3 transformedNormal;
-
+	
 	void main() {
 		position = gl_Vertex;
 		normal = gl_Normal;
 		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+		transformedPosition = gl_Position;
 		transformedNormal = normalize(gl_NormalMatrix * gl_Normal);
 	}
 );
@@ -25,6 +27,7 @@ static const char* fragmentShaderSrc = ShaderCode(140,
 	uniform sampler2D texture1;
 	varying vec4 position;
 	varying vec3 normal;
+	varying vec4 transformedPosition;
 	varying vec3 transformedNormal;
 
 	vec4 triplanarMapping(sampler2D texture, vec4 position, vec3 normal) {
@@ -60,7 +63,19 @@ static const char* fragmentShaderSrc = ShaderCode(140,
 			finalColor += diffuseC;
 		}	  
 
-		gl_FragColor = finalColor;
+		float fogMin = 10;
+		float fogMax = 18;
+		vec4 fogColor = vec4(1, 1, 1, 1);
+	
+		if(transformedPosition.z < fogMin) {
+			gl_FragColor = finalColor;
+		} else if(transformedPosition.z < fogMax){
+			float factor = (fogMax-transformedPosition.z) / (fogMax-fogMin);
+			gl_FragColor = (1-factor) * fogColor + factor * finalColor;
+		} else {
+			gl_FragColor = fogColor;
+		}
+
 	}
 );
 
