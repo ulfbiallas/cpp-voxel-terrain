@@ -171,7 +171,7 @@ void display(void) {
 
 
 		int t, v;
-		vector<TRIANGLE> triangles = voxelMap->getTriangles();
+		vector<TRIANGLE> triangles = voxelMap->getTriangles(viewer_pos, viewer_dir);
 
 		glUseProgram(shader->getProgram());
 

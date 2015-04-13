@@ -22,7 +22,7 @@ class Chunk {
 		float getDensity(int w, int h, int l);
 		void setDensity(int w, int h, int l, float value);
 		std::vector<TRIANGLE>* getTriangles();
-
+		Vec3f getCenter();
 
 
 	private:

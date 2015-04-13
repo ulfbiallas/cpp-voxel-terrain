@@ -97,6 +97,12 @@ float Chunk::getVerticalDistanceFromHeightMap(HeightMap *heightMap, int w, int h
 
 
 
+Vec3f Chunk::getCenter() {
+	return Vec3f(((float) pw + 0.5f) * width, ((float) ph+ 0.5f) * height, ((float) pl+ 0.5f) * length);
+}
+
+
+
 inline int Chunk::index(int w, int h, int l) {
 	return l * (width * height) + h * width + w;
 }

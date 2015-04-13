@@ -51,10 +51,6 @@ void VoxelMap::extractSurface() {
 	triangles.clear();
 	for (int k=0; k<chunkCount; ++k) {
 		chunks[k]->calculateSurface(marchingCuber, voxelSize);
-		std::vector<TRIANGLE> *chunkTriangles = chunks[k]->getTriangles();
-		for (int t=chunkTriangles->size()-1; t>=0; --t) {
-			triangles.push_back((*chunkTriangles)[t]);
-		}
 	}
 }
 
@@ -145,7 +141,22 @@ int VoxelMap::getChunkLength() {
 
 
 
-std::vector<TRIANGLE> VoxelMap::getTriangles() {
+std::vector<TRIANGLE> VoxelMap::getTriangles(Vec3f viewerPosition, Vec3f viewerDirection) {
+
+	int chunkCount = chunksW * chunksH * chunksL;
+	triangles.clear();
+	Vec3f chunkPos;
+	for (int k=0; k<chunkCount; ++k) {
+		chunkPos = chunks[k]->getCenter().mult(voxelSize);
+		float dist = chunkPos.sub(viewerPosition).norm();
+		if(dist < 25) {
+			std::vector<TRIANGLE> *chunkTriangles = chunks[k]->getTriangles();
+			for (int t=chunkTriangles->size()-1; t>=0; --t) {
+				triangles.push_back((*chunkTriangles)[t]);
+			}
+		}
+	}
+
 	return triangles;
 }
 

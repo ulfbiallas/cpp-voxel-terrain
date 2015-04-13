@@ -30,7 +30,7 @@ class VoxelMap {
 		int getChunkWidth();
 		int getChunkHeight();
 		int getChunkLength();
-		std::vector<TRIANGLE> getTriangles();
+		std::vector<TRIANGLE> getTriangles(Vec3f viewerPosition, Vec3f viewerDirection);
 		float intersectRay(Vec3f origin, Vec3f direction);
 		void extractSurface();
 		void changeDensityAtPoint(Vec3f point, DENSITY_CHANGE_METHOD densityChangeMethod);
